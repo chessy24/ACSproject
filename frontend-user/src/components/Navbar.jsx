@@ -32,7 +32,7 @@ export default function Navbar() {
 
   return (
     <nav style={styles.nav}>
-      <h2 style={styles.logo}>E-VEND</h2>
+      <h2 style={{ ...styles.logo, color: "white" }}>E-VEND</h2>
 
       {/* LINKS */}
       <div style={styles.links}>
