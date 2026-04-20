@@ -72,7 +72,7 @@ function AdminProducts() {
     formData.append("stock", form.stock);
     formData.append("image", imageFile); // 🔥 real file
 
-    await fetch("http://localhost:5000/api/products", {
+    await fetch(`${backendUrl}/api/products`, {
       method: "POST",
       body: formData
     });
