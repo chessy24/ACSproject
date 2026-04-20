@@ -13,30 +13,64 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
-app.use(cors());
+/* ========================
+   CORS CONFIG (FIXED)
+======================== */
+const allowedOrigins = process.env.FRONTEND_URLS
+  ? process.env.FRONTEND_URLS.split(",")
+  : [];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow REST tools like Postman
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(null, true); // TEMP: allow all during dev
+        // return callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+
+/* ========================
+   MIDDLEWARE
+======================== */
 app.use(express.json());
 
-// Test route
+/* ========================
+   TEST ROUTE
+======================== */
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-// Routes
+/* ========================
+   API ROUTES
+======================== */
 app.use("/api/orders", orderRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/payments", paymentRoutes);
 
-// MongoDB connection
-mongoose.connect(process.env.MONGO_URI)
+/* ========================
+   MONGODB CONNECTION
+======================== */
+mongoose
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
-  .catch(err => console.log(err));
+  .catch((err) => console.log("MongoDB error:", err));
 
-// Start server
+/* ========================
+   START SERVER (RENDER SAFE)
+======================== */
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });
