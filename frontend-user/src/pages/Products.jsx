@@ -81,7 +81,7 @@ function Products() {
       <h1 style={styles.title}>Products</h1>
 
       <div style={styles.filterBox}>
-        {["All", "Battery", "LED", "IC", "Resistor"].map((cat) => (
+        {["All", "Battery", "LED", "IC", "Resistor", "Breadboard", "Wires", "Voltage Regulator", "Diode", "Transistor"].map((cat) => (
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}

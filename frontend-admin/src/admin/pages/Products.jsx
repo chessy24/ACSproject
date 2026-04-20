@@ -118,10 +118,18 @@ function AdminProducts() {
             onChange={handleChange}
           >
             <option value="">Select Category</option>
+
             <option value="Battery">Battery</option>
             <option value="LED">LED</option>
             <option value="IC">IC</option>
             <option value="Resistor">Resistor</option>
+
+            {/* NEW */}
+            <option value="Breadboard">Breadboard</option>
+            <option value="Wires">Wires</option>
+            <option value="Voltage Regulator">Voltage Regulator</option>
+            <option value="Diode">Diode</option>
+            <option value="Transistor">Transistor</option>
           </select>
 
           <input
