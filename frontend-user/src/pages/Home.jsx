@@ -71,7 +71,9 @@ function Home() {
 
       {/* LEFT SIDE */}
       <div style={styles.left}>
-        <h1 style={styles.title}>Electronic Vending Machine</h1>
+        <h1 style={{ ...styles.title, color: "white" }}>
+          Electronic Vending Machine
+        </h1>
 
         <p style={styles.text}>
           Welcome to <span style={{ color: "white", fontWeight: "700" }}>E-VEND</span>,, your convenient online platform for
