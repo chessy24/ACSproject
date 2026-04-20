@@ -74,7 +74,7 @@ function Home() {
         <h1 style={styles.title}>Electronic Vending Machine</h1>
 
         <p style={styles.text}>
-          Welcome to E-VEND, your convenient online platform for
+          Welcome to <span style={{ color: "white", fontWeight: "700" }}>E-VEND</span>,, your convenient online platform for
           pre-ordering and securely claiming laboratory materials
           in the Computer Engineering Department.
         </p>
