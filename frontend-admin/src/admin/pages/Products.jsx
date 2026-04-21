@@ -70,7 +70,7 @@ function AdminProducts() {
     formData.append("description", form.description);
     formData.append("category", form.category);
     formData.append("stock", form.stock);
-    formData.append("image", imageFile); // 🔥 real file
+    formData.append("image", imageFile);
 
     await fetch(`${backendUrl}/api/products`, {
       method: "POST",
@@ -96,7 +96,8 @@ function AdminProducts() {
     <div style={styles.page}>
       <div style={styles.container}>
 
-        <h1 style={{ fontSize: "34px", color: "#0f172a", fontWeight: "700" }}>
+        {/* ✅ ONLY FIXED THIS TITLE (responsive safe) */}
+        <h1 style={styles.title}>
           Admin Product Management
         </h1>
 
@@ -184,7 +185,7 @@ function AdminProducts() {
         </form>
 
         {/* PRODUCT LIST */}
-        <h2 style={{ fontSize: "34px", fontWeight: "700", color: "#0f172a", marginTop: "30px", marginBottom: "10px" }}>
+        <h2 style={styles.subtitle}>
           Products
         </h2>
 
@@ -200,6 +201,7 @@ function AdminProducts() {
                   {p.description}
                 </p>
                 <p>Stock: {p.stock}</p>
+
                 <button
                   style={styles.deleteBtn}
                   onClick={() => deleteProduct(p._id)}
@@ -218,6 +220,7 @@ function AdminProducts() {
 
 export default AdminProducts;
 
+/* STYLES */
 const styles = {
   page: {
     background: "#ffffff",
@@ -232,8 +235,23 @@ const styles = {
     margin: "0 auto"
   },
 
+  /* ✅ REAL FIX (NO OVERLAP ON MOBILE) */
   title: {
-    marginBottom: "20px"
+    fontSize: "clamp(20px, 5vw, 34px)",
+    color: "#0f172a",
+    fontWeight: "700",
+    marginBottom: "20px",
+    textAlign: "center",
+    lineHeight: "1.2",
+    wordBreak: "break-word"
+  },
+
+  subtitle: {
+    fontSize: "clamp(18px, 4vw, 34px)",
+    fontWeight: "700",
+    color: "#0f172a",
+    marginTop: "30px",
+    marginBottom: "10px"
   },
 
   form: {
