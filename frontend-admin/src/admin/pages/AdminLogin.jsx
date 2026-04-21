@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 // ✅ LOGO IMPORT
-import logo from "../assets/about-image.png";
+import logo from "../../assets/about-image.png";
 
 export default function AdminLogin({ setIsAdmin }) {
   const [form, setForm] = useState({
