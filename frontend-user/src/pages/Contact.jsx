@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import backendUrl from "../../config"; // adjust path if needed
+import backendUrl from "../../config";
 
 function Contact() {
   const [form, setForm] = useState({
@@ -10,13 +10,24 @@ function Contact() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // SCREEN DETECT
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // INPUT HANDLER
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // SUBMIT TO BACKEND
+  // SUBMIT
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -39,7 +50,6 @@ function Contact() {
 
       alert("Message sent successfully!");
 
-      // RESET FORM
       setForm({
         name: "",
         email: "",
@@ -56,30 +66,42 @@ function Contact() {
 
   return (
     <motion.div
-      style={styles.container}
+      style={{
+        ...styles.container,
+        padding: isMobile ? "30px 20px" : "40px",
+      }}
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.3 }}
     >
+      <h1
+        style={{
+          ...styles.title,
+          fontSize: isMobile ? "28px" : "40px",
+        }}
+      >
+        Contact Us
+      </h1>
 
-      {/* TITLE */}
-      <h1 style={styles.title}>Contact Us</h1>
+      <div
+        style={{
+          ...styles.content,
+          flexDirection: isMobile ? "column" : "row",
+          gap: isMobile ? "25px" : "40px",
+        }}
+      >
 
-      <div style={styles.content}>
-
-        {/* LEFT SIDE INFO */}
+        {/* LEFT INFO */}
         <div style={styles.left}>
-          <div style={styles.item}><span style={styles.icon}>📍</span><p>Boni ave, Mandaluyong City</p></div>
+          <div style={styles.item}><span style={styles.icon}>📍</span><p>Boni Ave, Mandaluyong City</p></div>
           <div style={styles.item}><span style={styles.icon}>📧</span><p>aces.boni@rtu.edu.ph</p></div>
           <div style={styles.item}><span style={styles.icon}>📞</span><p>(02) 8534 8267</p></div>
           <div style={styles.item}><span style={styles.icon}>🕒</span><p>Mon-Sat: 8AM - 5PM</p></div>
           <div style={styles.item}><span style={styles.icon}>🌐</span><p>rtu.edu.ph</p></div>
         </div>
 
-        {/* RIGHT FORM */}
+        {/* FORM */}
         <form style={styles.right} onSubmit={handleSubmit}>
-
           <input
             name="name"
             value={form.name}
@@ -107,7 +129,6 @@ function Contact() {
           <button style={styles.button} disabled={loading}>
             {loading ? "Sending..." : "Send Message"}
           </button>
-
         </form>
 
       </div>
@@ -117,25 +138,24 @@ function Contact() {
 
 export default Contact;
 
+/* STYLES */
 const styles = {
   container: {
     minHeight: "100vh",
-    padding: "40px",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
   },
 
   title: {
-    fontSize: "40px",
     marginBottom: "30px",
     color: "#000",
     fontWeight: "700",
+    textAlign: "center",
   },
 
   content: {
     display: "flex",
-    gap: "40px",
     width: "100%",
     maxWidth: "1000px",
   },
@@ -144,7 +164,7 @@ const styles = {
     flex: 1,
     display: "flex",
     flexDirection: "column",
-    gap: "10px",
+    gap: "12px",
     color: "#555",
   },
 
@@ -156,22 +176,25 @@ const styles = {
   },
 
   input: {
+    width: "100%",
     padding: "12px",
     border: "1px solid #000",
-    borderRadius: "5px",
+    borderRadius: "6px",
     backgroundColor: "#fff",
     color: "#000",
     outline: "none",
   },
 
   textarea: {
+    width: "100%",
     padding: "12px",
-    height: "100px",
+    height: "120px",
     border: "1px solid #000",
-    borderRadius: "5px",
+    borderRadius: "6px",
     backgroundColor: "#fff",
     color: "#000",
     outline: "none",
+    resize: "none",
   },
 
   button: {
@@ -179,7 +202,7 @@ const styles = {
     background: "#aa3bff",
     color: "#fff",
     border: "none",
-    borderRadius: "5px",
+    borderRadius: "6px",
     cursor: "pointer",
     fontWeight: "600",
   },
