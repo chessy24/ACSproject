@@ -15,6 +15,7 @@ function AdminProducts() {
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState("");
   const [restockValues, setRestockValues] = useState({});
+  const [selectedImage, setSelectedImage] = useState(null);
 
   // FETCH PRODUCTS
   const fetchProducts = async () => {
@@ -94,27 +95,27 @@ function AdminProducts() {
   };
 
   const handleRestock = async (id) => {
-  const amount = restockValues[id];
+    const amount = restockValues[id];
 
-  if (!amount) return alert("Enter stock amount");
+    if (!amount) return alert("Enter stock amount");
 
-  try {
-    await fetch(`${backendUrl}/api/products/${id}/restock`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        amount: Number(amount),
-      }),
-    });
+    try {
+      await fetch(`${backendUrl}/api/products/${id}/restock`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: Number(amount),
+        }),
+      });
 
-    setRestockValues((prev) => ({ ...prev, [id]: "" }));
-    fetchProducts();
-  } catch (err) {
-    console.log(err);
-  }
-};
+      setRestockValues((prev) => ({ ...prev, [id]: "" }));
+      fetchProducts();
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
     <div style={styles.page}>
@@ -216,7 +217,11 @@ function AdminProducts() {
         <div style={styles.grid}>
           {products.map((p) => (
             <div key={p._id} style={styles.card}>
-              <img src={p.image} style={styles.cardImg} />
+              <img
+                src={p.image}
+                style={{ ...styles.cardImg, cursor: "pointer" }}
+                onClick={() => setSelectedImage(p.image)}
+              />
               <div style={styles.cardBody}>
                 <h3 style={styles.cardTitle}>{p.name}</h3>
                 <p style={styles.cardPrice}>₱{p.price}</p>
@@ -274,6 +279,24 @@ function AdminProducts() {
         </div>
 
       </div>
+      {selectedImage && (
+        <div style={styles.modalOverlay} onClick={() => setSelectedImage(null)}>
+          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <img
+              src={selectedImage}
+              alt="Product"
+              style={styles.modalImg}
+            />
+
+            <button
+              style={styles.closeBtn}
+              onClick={() => setSelectedImage(null)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
