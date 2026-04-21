@@ -39,7 +39,7 @@ export default function AdminLogin({ setIsAdmin }) {
   return (
     <div style={styles.page}>
       <form onSubmit={handleLogin} style={styles.card}>
-        <h2>Admin Login</h2>
+        <h2 style={{ color: "black" }}>Admin Login</h2>
 
         <input
           name="username"
