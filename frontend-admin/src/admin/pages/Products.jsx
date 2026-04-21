@@ -433,4 +433,42 @@ const styles = {
     fontWeight: "bold",
     cursor: "pointer",
   },
+  modalOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    background: "rgba(0,0,0,0.6)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999,
+  },
+
+  modal: {
+    background: "#fff",
+    padding: "15px",
+    borderRadius: "10px",
+    maxWidth: "500px",
+    width: "90%",
+    textAlign: "center",
+  },
+
+  modalImg: {
+    width: "100%",
+    borderRadius: "8px",
+    maxHeight: "400px",
+    objectFit: "contain",
+  },
+
+  closeBtn: {
+    marginTop: "10px",
+    padding: "8px 12px",
+    border: "none",
+    borderRadius: "6px",
+    background: "#ef4444",
+    color: "#fff",
+    cursor: "pointer",
+  },
 };
