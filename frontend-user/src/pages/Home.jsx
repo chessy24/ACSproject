@@ -14,6 +14,7 @@ function Home() {
 
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const startX = useRef(0);
   const endX = useRef(0);
@@ -29,12 +30,22 @@ function Home() {
     return () => clearInterval(interval);
   }, [paused, images.length]);
 
+  // SCREEN DETECT
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // NEXT / PREV
   const next = () => setIndex((prev) => (prev + 1) % images.length);
   const prev = () =>
     setIndex((prev) => (prev - 1 + images.length) % images.length);
 
-  // SWIPE HANDLERS
+  // SWIPE
   const handleTouchStart = (e) => {
     startX.current = e.touches[0].clientX;
   };
@@ -55,64 +66,89 @@ function Home() {
 
   const handleSwipe = () => {
     const diff = startX.current - endX.current;
-
     if (diff > 50) next();
     if (diff < -50) prev();
   };
 
   return (
     <motion.div
-      style={styles.container}
+      style={{
+        ...styles.container,
+        flexDirection: isMobile ? "column" : "row",
+        padding: isMobile ? "30px 20px" : "60px",
+        textAlign: isMobile ? "center" : "left",
+      }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
     >
-
-      {/* LEFT SIDE */}
+      {/* LEFT */}
       <div style={styles.left}>
-        <h1 style={{ ...styles.title, color: "white" }}>
+        <h1
+          style={{
+            ...styles.title,
+            fontSize: isMobile ? "32px" : "50px",
+          }}
+        >
           Electronic Vending Machine
         </h1>
 
-        <p style={styles.text}>
-          Welcome to <span style={{ color: "white", fontWeight: "700" }}>E-VEND</span>,, your convenient online platform for
-          pre-ordering and securely claiming laboratory materials
-          in the Computer Engineering Department.
+        <p
+          style={{
+            ...styles.text,
+            fontSize: isMobile ? "16px" : "20px",
+            margin: isMobile ? "20px auto" : "0 0 30px 0",
+          }}
+        >
+          Welcome to{" "}
+          <span style={{ color: "white", fontWeight: "700" }}>
+            E-VEND
+          </span>
+          , your convenient online platform for pre-ordering and securely
+          claiming laboratory materials in the Computer Engineering Department.
         </p>
 
-        <div style={styles.buttons}>
-          <Link to="/products" style={{ textDecoration: "none" }}>
-            <button style={styles.primaryBtn}>
+        <div
+          style={{
+            ...styles.buttons,
+            flexDirection: isMobile ? "column" : "row",
+            alignItems: "center",
+          }}
+        >
+          <Link to="/products" style={{ textDecoration: "none", width: isMobile ? "100%" : "auto" }}>
+            <button style={{ ...styles.primaryBtn, width: isMobile ? "100%" : "auto" }}>
               Order Now
             </button>
           </Link>
-          <Link to="/contact" style={{ textDecoration: "none" }}>
-            <button style={styles.secondaryBtn}>
+
+          <Link to="/contact" style={{ textDecoration: "none", width: isMobile ? "100%" : "auto" }}>
+            <button style={{ ...styles.secondaryBtn, width: isMobile ? "100%" : "auto" }}>
               Contact Us
             </button>
           </Link>
         </div>
       </div>
 
-      {/* RIGHT SIDE (SLIDESHOW) */}
+      {/* RIGHT */}
       <div
-        style={styles.right}
+        style={{
+          ...styles.right,
+          marginTop: isMobile ? "30px" : "0",
+        }}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
         <div
-          style={styles.sliderBox}
+          style={{
+            ...styles.sliderBox,
+            maxWidth: isMobile ? "100%" : "420px",
+          }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
         >
-          <img
-            src={images[index]}
-            alt="slide"
-            style={styles.image}
-          />
+          <img src={images[index]} alt="slide" style={styles.image} />
 
           {/* DOTS */}
           <div style={styles.dots}>
@@ -122,7 +158,8 @@ function Home() {
                 onClick={() => setIndex(i)}
                 style={{
                   ...styles.dot,
-                  background: i === index ? "white" : "rgba(255,255,255,0.4)",
+                  background:
+                    i === index ? "white" : "rgba(255,255,255,0.4)",
                 }}
               />
             ))}
@@ -142,7 +179,6 @@ const styles = {
     alignItems: "center",
     justifyContent: "space-between",
     minHeight: "100vh",
-    padding: "60px",
     background: "#021150",
     color: "white",
     gap: "40px",
@@ -156,16 +192,13 @@ const styles = {
   },
 
   title: {
-    fontSize: "50px",
     fontWeight: "800",
     marginBottom: "20px",
   },
 
   text: {
-    fontSize: "20px",
     lineHeight: "1.6",
     maxWidth: "500px",
-    marginBottom: "30px",
     color: "#d1d5ff",
   },
 
@@ -203,14 +236,11 @@ const styles = {
   sliderBox: {
     position: "relative",
     width: "100%",
-    maxWidth: "420px",
   },
 
   image: {
     width: "100%",
     borderRadius: "12px",
-    transition: "opacity 0.6s ease-in-out",
-    opacity: 1,
   },
 
   dots: {
