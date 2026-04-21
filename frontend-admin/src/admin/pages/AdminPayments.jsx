@@ -142,6 +142,28 @@ export default function AdminPayments() {
                   >
                     Reject
                   </button>
+
+                  {p.status === "Rejected" && (
+                    <button
+                      style={styles.deleteBtn}
+                      onClick={async () => {
+                        if (!window.confirm("Delete this rejected payment?")) return;
+
+                        try {
+                          await fetch(`${backendUrl}/api/payments/${p._id}`, {
+                            method: "DELETE",
+                          });
+
+                          // remove from UI
+                          setPayments((prev) => prev.filter((item) => item._id !== p._id));
+                        } catch (err) {
+                          console.log(err);
+                        }
+                      }}
+                    >
+                      Delete
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -270,5 +292,14 @@ const styles = {
     maxHeight: "90%",
     borderRadius: "10px",
     boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
-  }
+  },
+
+  deleteBtn: {
+    background: "#111827",
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    padding: "5px 10px",
+    cursor: "pointer",
+  },
 };
