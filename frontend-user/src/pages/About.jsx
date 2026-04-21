@@ -1,60 +1,116 @@
 import about from "../assets/about-image.png";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 function About() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // detect screen size
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <motion.div
-      style={styles.container}
+      style={{
+        ...styles.container,
+        flexDirection: isMobile ? "column" : "row",
+        padding: isMobile ? "30px 20px" : "40px",
+        textAlign: isMobile ? "center" : "left",
+      }}
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.3 }}
     >
       
-      {/* LEFT: IMAGE */}
-      <div style={styles.left}>
-        <img src={about} alt="About" style={styles.image} />
+      {/* IMAGE */}
+      <div
+        style={{
+          ...styles.left,
+          marginBottom: isMobile ? "20px" : "0",
+        }}
+      >
+        <img
+          src={about}
+          alt="About"
+          style={{
+            ...styles.image,
+            maxWidth: isMobile ? "250px" : "320px",
+          }}
+        />
       </div>
 
-      {/* RIGHT: TEXT */}
+      {/* TEXT */}
       <div style={styles.right}>
-        <h1 style={styles.title}>About Us</h1>
-        <p>
-          We are the association of computer students (acs) of rizal technological university, commited to supporting the academic and laboratory needs of computer engineering students. through E-VEND, we provide a secure and efficient platform for the organized distribution of laboratory materials within the department. 
+        <h1
+          style={{
+            ...styles.title,
+            fontSize: isMobile ? "26px" : "36px",
+          }}
+        >
+          About Us
+        </h1>
+
+        <p
+          style={{
+            ...styles.text,
+            fontSize: isMobile ? "15px" : "18px",
+            margin: isMobile ? "10px auto" : "0",
+          }}
+        >
+          We are the association of computer students (ACS) of Rizal Technological University,
+          committed to supporting the academic and laboratory needs of computer engineering students.
+          Through E-VEND, we provide a secure and efficient platform for the organized distribution
+          of laboratory materials within the department.
         </p>
       </div>
 
-     </motion.div>
+    </motion.div>
   );
 }
 
 export default About;
 
-// 👇 ADD IT HERE (outside the component)
+/* STYLES */
 const styles = {
   container: {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     minHeight: "100vh",
-    padding: "40px",
     gap: "40px",
   },
+
   left: {
     flex: 1,
     display: "flex",
     justifyContent: "center",
   },
+
   right: {
     flex: 1,
-    color: "#333" // 👈 add this
+    color: "#333",
   },
+
   image: {
     width: "100%",
-    maxWidth: "320px",
   },
+
   title: {
-  color: "#000",   // 👈 dark black
-  fontWeight: "700"
-},
+    color: "#000",
+    fontWeight: "700",
+    marginBottom: "15px",
+  },
+
+  text: {
+    lineHeight: "1.6",
+    maxWidth: "500px",
+    color: "#4b5563",
+  },
 };
