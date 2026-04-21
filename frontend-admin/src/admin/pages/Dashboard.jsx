@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import backendUrl from "../../config"; // adjust path if needed
+import backendUrl from "../../config";
 
 export default function Dashboard() {
   const [orders, setOrders] = useState([]);
@@ -11,6 +11,18 @@ export default function Dashboard() {
     Compartment: 0,
   });
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // SCREEN DETECT
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -20,14 +32,12 @@ export default function Dashboard() {
         const ordersArray = Array.isArray(data) ? data : [];
         setOrders(ordersArray);
 
-        // 💰 TOTAL REVENUE
         const total = ordersArray.reduce(
           (sum, o) => sum + (o.total || 0),
           0
         );
         setTotalRevenue(total);
 
-        // 📊 STATUS BREAKDOWN
         const stats = {
           Pending: 0,
           Shipped: 0,
@@ -39,8 +49,7 @@ export default function Dashboard() {
           if (o.status === "Pending") stats.Pending++;
           else if (o.status === "Shipped") stats.Shipped++;
           else if (o.status === "Delivered") stats.Delivered++;
-          
-          // if using compartment system
+
           if (o.compartment) stats.Compartment++;
         });
 
@@ -55,12 +64,28 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div style={styles.page}>
-      <h1 style={styles.title}>Admin Dashboard</h1>
+    <div
+      style={{
+        ...styles.page,
+        padding: isMobile ? "20px" : "30px",
+      }}
+    >
+      <h1
+        style={{
+          ...styles.title,
+          fontSize: isMobile ? "22px" : "28px",
+        }}
+      >
+        Admin Dashboard
+      </h1>
 
       {/* SUMMARY */}
-      <div style={styles.summary}>
-
+      <div
+        style={{
+          ...styles.summary,
+          flexDirection: isMobile ? "column" : "row",
+        }}
+      >
         <div style={styles.card}>
           <h3>Total Orders</h3>
           <p style={styles.big}>{orders.length}</p>
@@ -70,15 +95,18 @@ export default function Dashboard() {
           <h3>Total Revenue</h3>
           <p style={styles.big}>₱{totalRevenue}</p>
         </div>
-
       </div>
 
-      {/* STATUS BREAKDOWN */}
+      {/* STATUS */}
       <div style={styles.statusSection}>
         <h2>Status Overview</h2>
 
-        <div style={styles.statusGrid}>
-
+        <div
+          style={{
+            ...styles.statusGrid,
+            flexWrap: "wrap",
+          }}
+        >
           <div style={{ ...styles.statusCard, background: "#fbbf24" }}>
             <h4>Pending</h4>
             <p>{statusStats.Pending}</p>
@@ -98,16 +126,23 @@ export default function Dashboard() {
             <h4>With Compartment</h4>
             <p>{statusStats.Compartment}</p>
           </div>
-
         </div>
       </div>
 
-      {/* RECENT ORDERS */}
+      {/* ORDERS */}
       <div style={styles.list}>
         <h2>Recent Orders</h2>
 
         {orders.slice(0, 5).map((order) => (
-          <div key={order._id} style={styles.orderCard}>
+          <div
+            key={order._id}
+            style={{
+              ...styles.orderCard,
+              flexDirection: isMobile ? "column" : "row",
+              alignItems: isMobile ? "flex-start" : "center",
+              gap: isMobile ? "8px" : "0",
+            }}
+          >
             <div>
               <p><b>Order:</b> #{order._id.slice(-6)}</p>
               <p>₱{order.total}</p>
@@ -119,20 +154,18 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
-
     </div>
   );
 }
 
+/* STYLES */
 const styles = {
   page: {
-    padding: "30px",
     background: "#f3f4f6",
     minHeight: "100vh",
   },
 
   title: {
-    fontSize: "28px",
     fontWeight: "700",
     marginBottom: "20px",
   },
@@ -168,13 +201,12 @@ const styles = {
   },
 
   statusCard: {
-    flex: 1,
+    flex: "1 1 45%", // 👈 auto wrap on mobile
     padding: "15px",
     borderRadius: "10px",
-    color: "#111",
     fontWeight: "bold",
     textAlign: "center",
-    fontSize: "18px",
+    fontSize: "16px",
   },
 
   list: {
