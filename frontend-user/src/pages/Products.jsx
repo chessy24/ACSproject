@@ -1,22 +1,19 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import backendUrl from "../../config"; // adjust path if needed
+import backendUrl from "../../config";
 
 function Products() {
   const [products, setProducts] = useState([]);
-  const [added, setAdded] = useState({}); // feedback state
+  const [added, setAdded] = useState({});
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [search, setSearch] = useState(""); // ✅ NEW
 
   // FETCH PRODUCTS
   useEffect(() => {
     const fetchProducts = async () => {
-
       try {
         const res = await fetch(`${backendUrl}/api/products`);
         const data = await res.json();
-
-        console.log("PRODUCT DATA:", data); // 👈 ADD THIS
-
         setProducts(data);
       } catch (err) {
         console.log(err);
@@ -28,9 +25,8 @@ function Products() {
 
   // ADD TO CART
   const addToCart = (product) => {
-    const token = localStorage.getItem("token"); // or userId
+    const token = localStorage.getItem("token");
 
-    // ❌ NOT LOGGED IN CHECK
     if (!token) {
       alert("Please log in first to add items to cart.");
       return;
@@ -67,10 +63,18 @@ function Products() {
       }));
     }, 1200);
   };
-  const filteredProducts =
-    selectedCategory === "All"
-      ? products
-      : products.filter((p) => p.category === selectedCategory);
+
+  // ✅ FILTER LOGIC (CATEGORY + SEARCH)
+  const filteredProducts = products.filter((p) => {
+    const matchCategory =
+      selectedCategory === "All" || p.category === selectedCategory;
+
+    const matchSearch =
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.description?.toLowerCase().includes(search.toLowerCase());
+
+    return matchCategory && matchSearch;
+  });
 
   return (
     <motion.div
@@ -80,6 +84,16 @@ function Products() {
     >
       <h1 style={styles.title}>Products</h1>
 
+      {/* 🔍 SEARCH BOX */}
+      <input
+        type="text"
+        placeholder="Search products..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        style={styles.searchInput}
+      />
+
+      {/* CATEGORY FILTER */}
       <div style={styles.filterBox}>
         {["All", "Battery", "LED", "IC", "Resistor", "Breadboard", "Wires", "Voltage Regulator", "Diode", "Transistor"].map((cat) => (
           <button
@@ -96,27 +110,20 @@ function Products() {
         ))}
       </div>
 
+      {/* PRODUCTS */}
       <div style={styles.grid}>
         {filteredProducts.map((p) => (
           <div key={p._id} style={styles.card}>
-
-            {/* IMAGE */}
             <img src={p.image} alt={p.name} style={styles.image} />
 
-            {/* INFO */}
             <h3 style={styles.name}>{p.name}</h3>
             <p style={styles.price}>₱{p.price}</p>
             <p style={styles.category}>{p.category}</p>
 
-            {/* ADD THIS */}
             <p style={styles.description}>{p.description}</p>
 
-            {/* STOCK */}
-            <p style={styles.stock}>
-              Stock: {p.stock}
-            </p>
+            <p style={styles.stock}>Stock: {p.stock}</p>
 
-            {/* BUTTON */}
             <button
               disabled={p.stock === 0}
               onClick={() => addToCart(p)}
@@ -134,10 +141,8 @@ function Products() {
                 ? "Out of Stock"
                 : added[p._id]
                   ? "Added ✔"
-                  : "Add to Cart"
-              }
+                  : "Add to Cart"}
             </button>
-
           </div>
         ))}
       </div>
@@ -160,6 +165,16 @@ const styles = {
     fontSize: "28px",
     fontWeight: "700",
     marginBottom: "20px"
+  },
+
+  searchInput: {
+    width: "100%",
+    maxWidth: "400px",
+    padding: "10px",
+    borderRadius: "8px",
+    border: "1px solid #ccc",
+    marginBottom: "20px",
+    outline: "none"
   },
 
   grid: {
@@ -199,6 +214,13 @@ const styles = {
     opacity: 0.6
   },
 
+  description: {
+    fontSize: "12px",
+    color: "#4b5563",
+    marginTop: "5px",
+    lineHeight: "1.4",
+  },
+
   stock: {
     fontSize: "12px",
     color: "#6b7280",
@@ -213,24 +235,19 @@ const styles = {
     color: "white",
     fontWeight: "bold"
   },
-  description: {
-    fontSize: "12px",
-    color: "#4b5563",
-    marginTop: "5px",
-    lineHeight: "1.4",
-  },
-  filterBox: {
-  display: "flex",
-  gap: "10px",
-  marginBottom: "20px",
-  flexWrap: "wrap"
-},
 
-filterBtn: {
-  padding: "8px 12px",
-  border: "none",
-  borderRadius: "20px",
-  cursor: "pointer",
-  fontWeight: "bold"
-},
+  filterBox: {
+    display: "flex",
+    gap: "10px",
+    marginBottom: "20px",
+    flexWrap: "wrap"
+  },
+
+  filterBtn: {
+    padding: "8px 12px",
+    border: "none",
+    borderRadius: "20px",
+    cursor: "pointer",
+    fontWeight: "bold"
+  },
 };
