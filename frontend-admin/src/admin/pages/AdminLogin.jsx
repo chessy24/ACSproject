@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+// ✅ LOGO IMPORT
+import logo from "../assets/about-image.png";
+
 export default function AdminLogin({ setIsAdmin }) {
   const [form, setForm] = useState({
     username: "",
     password: "",
   });
 
-  const [showPassword, setShowPassword] = useState(false); // 👈 NEW
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -18,7 +21,6 @@ export default function AdminLogin({ setIsAdmin }) {
   const handleLogin = (e) => {
     e.preventDefault();
 
-    // 🔐 HARDCODED ADMIN ACCOUNT
     const ADMIN_USER = "admin";
     const ADMIN_PASS = "123456";
 
@@ -28,7 +30,7 @@ export default function AdminLogin({ setIsAdmin }) {
     ) {
       localStorage.setItem("admin", "true");
 
-      setIsAdmin(true); // 🔥 THIS IS THE FIX
+      setIsAdmin(true);
 
       navigate("/admin");
     } else {
@@ -38,7 +40,14 @@ export default function AdminLogin({ setIsAdmin }) {
 
   return (
     <div style={styles.page}>
+
       <form onSubmit={handleLogin} style={styles.card}>
+
+        {/* ✅ LOGO ADDED HERE */}
+        <div style={styles.logoBox}>
+          <img src={logo} alt="logo" style={styles.logo} />
+        </div>
+
         <h2 style={{ color: "black" }}>Admin Login</h2>
 
         <input
@@ -53,7 +62,7 @@ export default function AdminLogin({ setIsAdmin }) {
         <div style={styles.passwordBox}>
           <input
             name="password"
-            type={showPassword ? "text" : "password"} // 👈 TOGGLE
+            type={showPassword ? "text" : "password"}
             placeholder="Password"
             onChange={handleChange}
             style={styles.input}
@@ -70,10 +79,12 @@ export default function AdminLogin({ setIsAdmin }) {
 
         <button style={styles.button}>Login</button>
       </form>
+
     </div>
   );
 }
 
+/* STYLES */
 const styles = {
   page: {
     display: "flex",
@@ -92,6 +103,20 @@ const styles = {
     flexDirection: "column",
     gap: "10px",
     boxShadow: "0 5px 20px rgba(0,0,0,0.1)",
+    textAlign: "center",
+  },
+
+  /* ✅ LOGO STYLES */
+  logoBox: {
+    display: "flex",
+    justifyContent: "center",
+    marginBottom: "10px",
+  },
+
+  logo: {
+    width: "70px",
+    height: "70px",
+    objectFit: "contain",
   },
 
   input: {
