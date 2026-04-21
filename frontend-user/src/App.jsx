@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
+import AdminLogin from "./admin/pages/AdminLogin";
 
 import Navbar from "./components/Navbar";
 
@@ -29,6 +30,8 @@ function AnimatedRoutes() {
         <Route path="/cart" element={<Cart />} />
          <Route path="/orders" element={<Orders />} />
          <Route path="/gcash-payment/:orderId" element={<GcashPayment />} />
+
+         <Route path="/admin-login" element={<AdminLogin />} />
       </Routes>
     </AnimatePresence>
   );
