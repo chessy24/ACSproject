@@ -146,6 +146,14 @@ export default function Orders() {
                                     <p style={{ fontSize: "12px" }}>
                                         Ref: {order.payment.reference}
                                     </p>
+
+                                    {/* 🔥 ADD THIS */}
+                                    {order.payment.status === "Rejected" && order.payment.rejectReason && (
+                                        <p style={{ color: "red", fontSize: "12px", marginTop: "5px" }}>
+                                            Reason: {order.payment.rejectReason}
+                                        </p>
+                                    )}
+
                                 </div>
                             )}
 
@@ -154,23 +162,23 @@ export default function Orders() {
                 </div>
             )}
             {selectedProof && (
-  <div style={styles.modalOverlay} onClick={() => setSelectedProof(null)}>
-    <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-      <img
-        src={selectedProof}
-        alt="payment proof"
-        style={styles.modalImg}
-      />
+                <div style={styles.modalOverlay} onClick={() => setSelectedProof(null)}>
+                    <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+                        <img
+                            src={selectedProof}
+                            alt="payment proof"
+                            style={styles.modalImg}
+                        />
 
-      <button
-        style={styles.closeBtn}
-        onClick={() => setSelectedProof(null)}
-      >
-        Close
-      </button>
-    </div>
-  </div>
-)}
+                        <button
+                            style={styles.closeBtn}
+                            onClick={() => setSelectedProof(null)}
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -323,53 +331,53 @@ const styles = {
         marginTop: "5px",
     },
     viewBtn: {
-  marginTop: "8px",
-  padding: "8px 12px",
-  border: "none",
-  borderRadius: "8px",
-  background: "#6366f1",
-  color: "#fff",
-  fontWeight: "bold",
-  cursor: "pointer",
-},
+        marginTop: "8px",
+        padding: "8px 12px",
+        border: "none",
+        borderRadius: "8px",
+        background: "#6366f1",
+        color: "#fff",
+        fontWeight: "bold",
+        cursor: "pointer",
+    },
 
-modalOverlay: {
-  position: "fixed",
-  top: 0,
-  left: 0,
-  width: "100%",
-  height: "100%",
-  background: "rgba(0,0,0,0.6)",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  zIndex: 999,
-},
+    modalOverlay: {
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        background: "rgba(0,0,0,0.6)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 999,
+    },
 
-modal: {
-  background: "#fff",
-  padding: "15px",
-  borderRadius: "10px",
-  maxWidth: "500px",
-  width: "90%",
-  textAlign: "center",
-},
+    modal: {
+        background: "#fff",
+        padding: "15px",
+        borderRadius: "10px",
+        maxWidth: "500px",
+        width: "90%",
+        textAlign: "center",
+    },
 
-modalImg: {
-  width: "100%",
-  borderRadius: "8px",
-  maxHeight: "400px",
-  objectFit: "contain",
-},
+    modalImg: {
+        width: "100%",
+        borderRadius: "8px",
+        maxHeight: "400px",
+        objectFit: "contain",
+    },
 
-closeBtn: {
-  marginTop: "10px",
-  padding: "8px 12px",
-  border: "none",
-  borderRadius: "6px",
-  background: "#ef4444",
-  color: "#fff",
-  cursor: "pointer",
-},
+    closeBtn: {
+        marginTop: "10px",
+        padding: "8px 12px",
+        border: "none",
+        borderRadius: "6px",
+        background: "#ef4444",
+        color: "#fff",
+        cursor: "pointer",
+    },
 
 };
