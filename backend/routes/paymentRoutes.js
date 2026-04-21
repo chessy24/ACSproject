@@ -11,8 +11,6 @@ router.post("/gcash", upload.single("proof"), async (req, res) => {
   try {
     const { orderId, userId, name, reference } = req.body;
 
-    console.log("BODY:", req.body);
-
     if (!userId) {
       return res.status(400).json({ message: "userId is required" });
     }
@@ -21,6 +19,18 @@ router.post("/gcash", upload.single("proof"), async (req, res) => {
       return res.status(400).json({ message: "proof image is required" });
     }
 
+    // 🔍 CHECK EXISTING PAYMENT
+    const existingPayment = await Payment.findOne({ orderId });
+
+    if (existingPayment) {
+      if (existingPayment.status === "Pending" || existingPayment.status === "Approved") {
+        return res.status(400).json({
+          message: "Payment already submitted",
+        });
+      }
+    }
+
+    // 📤 Upload image
     const streamUpload = (fileBuffer) => {
       return new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
@@ -37,13 +47,29 @@ router.post("/gcash", upload.single("proof"), async (req, res) => {
 
     const result = await streamUpload(req.file.buffer);
 
-    const payment = await Payment.create({
-      orderId,
-      userId,
-      name,
-      reference,
-      proof: result.secure_url,
-    });
+    let payment;
+
+    // 🔁 RETRY CASE (Rejected)
+    if (existingPayment && existingPayment.status === "Rejected") {
+      existingPayment.name = name;
+      existingPayment.reference = reference;
+      existingPayment.proof = result.secure_url;
+      existingPayment.status = "Pending";
+      existingPayment.rejectReason = "";
+
+      payment = await existingPayment.save();
+
+    } else {
+      // 🆕 NEW PAYMENT
+      payment = await Payment.create({
+        orderId,
+        userId,
+        name,
+        reference,
+        proof: result.secure_url,
+        status: "Pending",
+      });
+    }
 
     res.json(payment);
 
