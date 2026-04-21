@@ -14,6 +14,7 @@ function AdminProducts() {
 
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState("");
+  const [restockValues, setRestockValues] = useState({});
 
   // FETCH PRODUCTS
   const fetchProducts = async () => {
@@ -90,6 +91,29 @@ function AdminProducts() {
     setPreview("");
 
     fetchProducts();
+  };
+
+  const handleRestock = async (id) => {
+    const newStock = restockValues[id];
+
+    if (!newStock) return alert("Enter stock amount");
+
+    try {
+      await fetch(`${backendUrl}/api/products/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          stock: Number(newStock),
+        }),
+      });
+
+      setRestockValues((prev) => ({ ...prev, [id]: "" }));
+      fetchProducts();
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   return (
@@ -201,6 +225,42 @@ function AdminProducts() {
                   {p.description}
                 </p>
                 <p>Stock: {p.stock}</p>
+
+                <input
+                  type="number"
+                  placeholder="Restock amount"
+                  value={restockValues[p._id] || ""}
+                  onChange={(e) =>
+                    setRestockValues({
+                      ...restockValues,
+                      [p._id]: e.target.value,
+                    })
+                  }
+                  style={{
+                    marginTop: "8px",
+                    width: "100%",
+                    padding: "6px",
+                    borderRadius: "6px",
+                    border: "none",
+                  }}
+                />
+
+                <button
+                  style={{
+                    marginTop: "5px",
+                    width: "100%",
+                    padding: "8px",
+                    background: "#3b82f6",
+                    border: "none",
+                    color: "white",
+                    borderRadius: "8px",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => handleRestock(p._id)}
+                >
+                  Restock 🔄
+                </button>
 
                 <button
                   style={styles.deleteBtn}
