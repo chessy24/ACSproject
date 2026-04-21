@@ -29,9 +29,9 @@ export default function Login() {
 
     const payload = isLogin
       ? {
-          email: form.email,
-          password: form.password,
-        }
+        email: form.email,
+        password: form.password,
+      }
       : form;
 
     try {
@@ -143,6 +143,14 @@ export default function Login() {
             {isLogin ? "Login" : "Create Account"}
           </button>
 
+          <button
+            type="button"
+            onClick={() => navigate("/admin-login")}
+            style={styles.adminBtn}
+          >
+            Are you an admin? Login here
+          </button>
+
         </form>
       </div>
     </div>
@@ -214,4 +222,13 @@ const styles = {
     borderRadius: "6px",
     cursor: "pointer",
   },
+  adminBtn: {
+  marginTop: "5px",
+  padding: "10px",
+  background: "#64748b",
+  color: "white",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+},
 };
