@@ -94,27 +94,27 @@ function AdminProducts() {
   };
 
   const handleRestock = async (id) => {
-    const newStock = restockValues[id];
+  const amount = restockValues[id];
 
-    if (!newStock) return alert("Enter stock amount");
+  if (!amount) return alert("Enter stock amount");
 
-    try {
-      await fetch(`${backendUrl}/api/products/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          stock: Number(newStock),
-        }),
-      });
+  try {
+    await fetch(`${backendUrl}/api/products/${id}/restock`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        amount: Number(amount),
+      }),
+    });
 
-      setRestockValues((prev) => ({ ...prev, [id]: "" }));
-      fetchProducts();
-    } catch (err) {
-      console.log(err);
-    }
-  };
+    setRestockValues((prev) => ({ ...prev, [id]: "" }));
+    fetchProducts();
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   return (
     <div style={styles.page}>

@@ -79,25 +79,21 @@ router.delete("/:id", async (req, res) => {
 /* =========================
    UPDATE PRODUCT (RESTOCK / EDIT)
 ========================= */
-router.put("/:id", async (req, res) => {
+router.put("/:id/restock", async (req, res) => {
   try {
+    const { amount } = req.body;
+
     const updated = await Product.findByIdAndUpdate(
       req.params.id,
       {
-        $set: {
-          name: req.body.name,
-          price: req.body.price,
-          description: req.body.description,
-          category: req.body.category,
-          stock: req.body.stock,
-        },
+        $inc: { stock: Number(amount) }
       },
       { new: true }
     );
 
     res.json(updated);
   } catch (err) {
-    res.status(500).json({ message: "Update failed" });
+    res.status(500).json({ message: "Restock failed" });
   }
 });
 
