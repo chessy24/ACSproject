@@ -104,16 +104,19 @@ export default function Orders() {
                                 <h3>Total: ₱{order.total}</h3>
 
                                 {/* GCASH BUTTON */}
-                                {order.status === "Pending" && (
-                                    <button
-                                        onClick={() =>
-                                            navigate(`/gcash-payment/${order._id}`)
-                                        }
-                                        style={styles.gcashBtn}
-                                    >
-                                        Pay with GCash 💳
-                                    </button>
-                                )}
+                                {order.status === "Pending" &&
+                                    (!order.payment || order.payment.status === "Rejected") && (
+                                        <button
+                                            onClick={() =>
+                                                navigate(`/gcash-payment/${order._id}`)
+                                            }
+                                            style={styles.gcashBtn}
+                                        >
+                                            {order.payment?.status === "Rejected"
+                                                ? "Retry Payment 💳"
+                                                : "Pay with GCash 💳"}
+                                        </button>
+                                    )}
                             </div>
 
                             {order.payment && (
