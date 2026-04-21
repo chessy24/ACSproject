@@ -143,13 +143,19 @@ export default function Login() {
             {isLogin ? "Login" : "Create Account"}
           </button>
 
-          <button
-            type="button"
-            onClick={() => navigate("/admin-login")}
-            style={styles.adminBtn}
+          <p
+            onClick={() => window.location.href = "https://admin.acsonline.shop/admin-login"}
+            style={{
+              marginTop: "10px",
+              textAlign: "center",
+              color: "#021150",
+              cursor: "pointer",
+              textDecoration: "underline",
+              fontSize: "14px",
+            }}
           >
-            Are you an admin? Login here
-          </button>
+            Are you an admin?
+          </p>
 
         </form>
       </div>
@@ -223,12 +229,12 @@ const styles = {
     cursor: "pointer",
   },
   adminBtn: {
-  marginTop: "5px",
-  padding: "10px",
-  background: "#64748b",
-  color: "white",
-  border: "none",
-  borderRadius: "6px",
-  cursor: "pointer",
-},
+    marginTop: "5px",
+    padding: "10px",
+    background: "#64748b",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+  },
 };
