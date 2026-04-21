@@ -22,6 +22,11 @@ const paymentSchema = new mongoose.Schema(
       type: String,
       default: "Pending",
     },
+
+    rejectReason: {
+      type: String,
+      default: "",
+    }
   },
   { timestamps: true }
 );

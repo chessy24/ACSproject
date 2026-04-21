@@ -3,6 +3,7 @@ import backendUrl from "../../config"; // adjust path if needed
 
 export default function AdminPayments() {
   const [payments, setPayments] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -18,15 +19,16 @@ export default function AdminPayments() {
 
     fetchPayments();
   }, []);
-
-  const updateStatus = async (id, status) => {
+  const updateStatus = async (id, status, rejectReason = "") => {
     try {
       const res = await fetch(`${backendUrl}/api/payments/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({
+          status, rejectReason,
+        }),
       });
 
       const updated = await res.json();
@@ -76,9 +78,21 @@ export default function AdminPayments() {
                 </span>
               </div>
 
+              {/* REJECTION REASON */}
+              {p.status === "Rejected" && p.rejectReason && (
+                <p style={{ color: "#ef4444", fontSize: "12px", marginTop: "5px" }}>
+                  Reason: {p.rejectReason}
+                </p>
+              )}
+
               {/* IMAGE */}
               <div style={styles.imageBox}>
-                <img src={p.proof} alt="proof" style={styles.image} />
+                <img
+                  src={p.proof}
+                  alt="proof"
+                  style={{ ...styles.image, cursor: "pointer" }}
+                  onClick={() => setSelectedImage(p.proof)}
+                />
               </div>
 
               {/* FOOTER */}
@@ -117,8 +131,12 @@ export default function AdminPayments() {
                     }}
                     disabled={p.status === "Rejected"}
                     onClick={() => {
-                      if (window.confirm("Are you sure you want to REJECT this payment?")) {
-                        updateStatus(p._id, "Rejected");
+                      const reason = prompt("Enter reason for rejection:");
+
+                      if (!reason) return;
+
+                      if (window.confirm("Confirm rejection?")) {
+                        updateStatus(p._id, "Rejected", reason);
                       }
                     }}
                   >
@@ -129,6 +147,19 @@ export default function AdminPayments() {
 
             </div>
           ))}
+        </div>
+      )}
+
+      {selectedImage && (
+        <div
+          onClick={() => setSelectedImage(null)}
+          style={styles.modal}
+        >
+          <img
+            src={selectedImage}
+            alt="Full View"
+            style={styles.modalImg}
+          />
         </div>
       )}
     </div>
@@ -220,4 +251,24 @@ const styles = {
     borderTop: "1px solid #eee",
     paddingTop: "8px",
   },
+  modal: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100vw",
+    height: "100vh",
+    background: "rgba(0,0,0,0.8)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 9999,
+    cursor: "zoom-out",
+  },
+
+  modalImg: {
+    maxWidth: "90%",
+    maxHeight: "90%",
+    borderRadius: "10px",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+  }
 };

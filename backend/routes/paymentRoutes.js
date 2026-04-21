@@ -62,11 +62,14 @@ router.get("/", async (req, res) => {
 // UPDATE PAYMENT STATUS
 router.put("/:id", async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, rejectReason } = req.body;
 
     const updatedPayment = await Payment.findByIdAndUpdate(
       req.params.id,
-      { status },
+      {
+        status,
+        rejectReason: status === "Rejected" ? rejectReason : "",
+      },
       { new: true }
     );
 
