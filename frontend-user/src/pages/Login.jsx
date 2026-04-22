@@ -221,6 +221,8 @@ const styles = {
   eye: {
     position: "absolute",
     right: "10px",
+    top: "50%",                 // 👈 center vertically
+    transform: "translateY(-50%)",
     cursor: "pointer",
     fontSize: "18px",
     userSelect: "none",
@@ -242,5 +244,9 @@ const styles = {
     border: "none",
     borderRadius: "6px",
     cursor: "pointer",
+  },
+  inputWrapper: {
+    position: "relative", // 👈 THIS IS THE FIX
+    width: "100%",
   },
 };
