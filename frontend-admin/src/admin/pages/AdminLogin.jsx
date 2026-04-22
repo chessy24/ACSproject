@@ -29,9 +29,7 @@ export default function AdminLogin({ setIsAdmin }) {
       form.password === ADMIN_PASS
     ) {
       localStorage.setItem("admin", "true");
-
       setIsAdmin(true);
-
       navigate("/admin");
     } else {
       alert("Invalid admin credentials");
@@ -40,26 +38,28 @@ export default function AdminLogin({ setIsAdmin }) {
 
   return (
     <div style={styles.page}>
-
       <form onSubmit={handleLogin} style={styles.card}>
 
-        {/* ✅ LOGO ADDED HERE */}
+        {/* LOGO */}
         <div style={styles.logoBox}>
           <img src={logo} alt="logo" style={styles.logo} />
         </div>
 
         <h2 style={{ color: "black" }}>Admin Login</h2>
 
-        <input
-          name="username"
-          placeholder="Username"
-          onChange={handleChange}
-          style={styles.input}
-          required
-        />
+        {/* USERNAME */}
+        <div style={styles.inputWrapper}>
+          <input
+            name="username"
+            placeholder="Username"
+            onChange={handleChange}
+            style={styles.input}
+            required
+          />
+        </div>
 
-        {/* PASSWORD FIELD */}
-        <div style={styles.passwordBox}>
+        {/* PASSWORD */}
+        <div style={styles.inputWrapper}>
           <input
             name="password"
             type={showPassword ? "text" : "password"}
@@ -79,7 +79,6 @@ export default function AdminLogin({ setIsAdmin }) {
 
         <button style={styles.button}>Login</button>
       </form>
-
     </div>
   );
 }
@@ -101,12 +100,11 @@ const styles = {
     width: "300px",
     display: "flex",
     flexDirection: "column",
-    gap: "10px",
+    gap: "12px",
     boxShadow: "0 5px 20px rgba(0,0,0,0.1)",
     textAlign: "center",
   },
 
-  /* ✅ LOGO STYLES */
   logoBox: {
     display: "flex",
     justifyContent: "center",
@@ -119,21 +117,28 @@ const styles = {
     objectFit: "contain",
   },
 
+  /* ✅ FIXED WRAPPER */
+  inputWrapper: {
+    position: "relative",
+    width: "100%",
+  },
+
+  /* ✅ FIXED INPUT */
   input: {
+    width: "100%",
     padding: "10px",
+    paddingRight: "55px", // space for "Show"
     borderRadius: "6px",
     border: "1px solid #ccc",
+    boxSizing: "border-box",
   },
 
-  passwordBox: {
-    position: "relative",
-    display: "flex",
-    alignItems: "center",
-  },
-
+  /* ✅ FIXED TOGGLE */
   toggle: {
     position: "absolute",
     right: "10px",
+    top: "50%",
+    transform: "translateY(-50%)",
     cursor: "pointer",
     fontSize: "12px",
     color: "#3b82f6",
