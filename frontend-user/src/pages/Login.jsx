@@ -101,26 +101,30 @@ export default function Login() {
 
           {/* NAME (ONLY SIGNUP) */}
           {!isLogin && (
-            <input
-              name="name"
-              placeholder="Full Name"
-              value={form.name}
-              onChange={handleChange}
-              style={styles.input}
-            />
+            <div style={styles.inputWrapper}>
+              <input
+                name="name"
+                placeholder="Full Name"
+                value={form.name}
+                onChange={handleChange}
+                style={styles.input}
+              />
+            </div>
           )}
 
           {/* EMAIL */}
-          <input
-            name="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            style={styles.input}
-          />
+          <div style={styles.inputWrapper}>
+            <input
+              name="email"
+              placeholder="Email"
+              value={form.email}
+              onChange={handleChange}
+              style={styles.input}
+            />
+          </div>
 
           {/* PASSWORD */}
-          <div style={styles.passwordBox}>
+          <div style={styles.inputWrapper}>
             <input
               name="password"
               placeholder="Password"
@@ -202,8 +206,10 @@ const styles = {
   input: {
     width: "100%",
     padding: "10px",
+    paddingRight: "40px", // 👈 space for eye icon
     borderRadius: "6px",
     border: "1px solid #ccc",
+    boxSizing: "border-box", // 👈 VERY IMPORTANT (fix alignment)
   },
 
   passwordBox: {
