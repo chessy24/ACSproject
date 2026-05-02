@@ -84,6 +84,7 @@ router.put("/:id/status", async (req, res) => {
     if (status === "Delivered") {
       const payment = await Payment.findOne({
         orderId: order._id,
+        status: "Approved", // ✅ FILTER HERE
       });
 
       if (!payment || payment.status !== "Approved") {
