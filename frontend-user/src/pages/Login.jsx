@@ -12,6 +12,10 @@ export default function Login() {
     password: "",
   });
 
+  const isValidRTUEmail = (email) => {
+    return email.endsWith("@rtu.edu.ph");
+  };
+
   const navigate = useNavigate();
 
   // INPUT CHANGE
@@ -22,6 +26,11 @@ export default function Login() {
   // SUBMIT LOGIN / REGISTER
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // 🔥 EMAIL VALIDATION (FRONTEND)
+    if (!isLogin && !form.email.endsWith("@rtu.edu.ph")) {
+      return alert("Only @rtu.edu.ph emails are allowed to register");
+    }
 
     const url = isLogin
       ? `${backendUrl}/api/auth/login`
@@ -49,7 +58,6 @@ export default function Login() {
         return alert(data.message || "Error");
       }
 
-      // ✅ SAVE TOKEN + USER (THIS FIXES YOUR NAVBAR ISSUE)
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
@@ -60,7 +68,6 @@ export default function Login() {
 
       alert(data.message || "Success");
       navigate("/");
-
     } catch (err) {
       console.log(err);
       alert("Server error");

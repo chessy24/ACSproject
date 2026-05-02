@@ -12,6 +12,13 @@ router.post("/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
+    // 🔥 ONLY RTU EMAILS ALLOWED
+    if (!email.endsWith("@rtu.edu.ph")) {
+      return res.status(400).json({
+        message: "Only @rtu.edu.ph emails are allowed",
+      });
+    }
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
@@ -26,6 +33,7 @@ router.post("/register", async (req, res) => {
     });
 
     res.json({ message: "User created", user });
+
   } catch (err) {
     res.status(500).json({ message: "Register error", err });
   }
