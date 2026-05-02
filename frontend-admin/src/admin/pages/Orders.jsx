@@ -5,20 +5,19 @@ function Orders() {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const res = await fetch(`${backendUrl}/api/orders`);
-        const data = await res.json();
-
-        setOrders(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.log(err);
-        setOrders([]);
-      }
-    };
-
     fetchOrders();
   }, []);
+
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch(`${backendUrl}/api/orders`);
+      const data = await res.json();
+      setOrders(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.log(err);
+      setOrders([]);
+    }
+  };
 
   const updateOrder = async (id, updates) => {
     try {
@@ -31,10 +30,16 @@ function Orders() {
         }
       );
 
-      const updated = await res.json();
+      const data = await res.json();
+
+      // ❌ BACKEND ERROR (payment not approved)
+      if (!res.ok) {
+        alert(data.message);
+        return;
+      }
 
       setOrders((prev) =>
-        prev.map((o) => (o._id === id ? updated : o))
+        prev.map((o) => (o._id === id ? data : o))
       );
     } catch (err) {
       console.log(err);
@@ -44,7 +49,7 @@ function Orders() {
   const handleAssignCompartment = (order, value) => {
     updateOrder(order._id, {
       compartment: value,
-      compartmentPassword: order.compartmentPassword, // 🔥 keep backend-generated password
+      compartmentPassword: order.compartmentPassword,
     });
   };
 
@@ -60,11 +65,10 @@ function Orders() {
 
           <div style={styles.header}>
             <div>
-              {/* 🔥 USER INFO (NOW WORKS BECAUSE OF POPULATE) */}
               <p>User: {order.userId?.name || "Unknown"}</p>
               <p>Email: {order.userId?.email || "—"}</p>
 
-              <p>Order #{order?._id?.slice(-6) || "N/A"}</p>
+              <p>Order #{order._id.slice(-6)}</p>
               <p>Total: ₱{order.total}</p>
 
               <p style={styles.password}>
@@ -74,6 +78,21 @@ function Orders() {
 
             <div style={styles.badges}>
               <span style={styles.badge}>{order.status}</span>
+
+              {/* ✅ PAYMENT BADGE */}
+              <span
+                style={{
+                  ...styles.badge,
+                  background:
+                    order.paymentStatus === "Approved"
+                      ? "#22c55e"
+                      : "#ef4444",
+                  color: "white",
+                }}
+              >
+                {order.paymentStatus}
+              </span>
+
               <span style={styles.comp}>
                 Compartment #{order.compartment || "—"}
               </span>
@@ -83,13 +102,32 @@ function Orders() {
           {/* STATUS */}
           <select
             value={order.status}
-            onChange={(e) =>
-              updateOrder(order._id, { status: e.target.value })
-            }
+            onChange={(e) => {
+              const newStatus = e.target.value;
+
+              if (
+                newStatus === "Delivered" &&
+                order.paymentStatus !== "Approved"
+              ) {
+                alert("❌ Cannot mark Delivered without approved payment");
+                return;
+              }
+
+              updateOrder(order._id, { status: newStatus });
+            }}
             style={styles.select}
           >
             {statusOptions.map((s) => (
-              <option key={s}>{s}</option>
+              <option
+                key={s}
+                value={s}
+                disabled={
+                  s === "Delivered" &&
+                  order.paymentStatus !== "Approved"
+                }
+              >
+                {s}
+              </option>
             ))}
           </select>
 

@@ -1,6 +1,7 @@
 import express from "express";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
+import Payment from "../models/Payment.js";
 import { getUserOrdersWithPayments } from "../controller/orderController.js";
 
 const router = express.Router();
@@ -77,7 +78,24 @@ router.put("/:id/status", async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // 🔥 STOCK DEDUCTION ONLY ON FIRST DELIVERY
+    // =========================
+    // 🔒 BLOCK DELIVERY IF NOT PAID
+    // =========================
+    if (status === "Delivered") {
+      const payment = await Payment.findOne({
+        orderId: order._id,
+      });
+
+      if (!payment || payment.status !== "Approved") {
+        return res.status(400).json({
+          message: "Cannot deliver: Payment not approved",
+        });
+      }
+    }
+
+    // =========================
+    // 📦 STOCK DEDUCTION (SAFE NOW)
+    // =========================
     if (status === "Delivered" && order.status !== "Delivered") {
       for (const item of order.items) {
         await Product.findByIdAndUpdate(item.productId, {
@@ -86,7 +104,9 @@ router.put("/:id/status", async (req, res) => {
       }
     }
 
-    // 🔥 ONLY GENERATE PASSWORD IF EMPTY (NEVER REGEN)
+    // =========================
+    // 🔐 PASSWORD GENERATION
+    // =========================
     if (!order.compartmentPassword && status === "Delivered") {
       order.compartmentPassword = Math.floor(
         1000 + Math.random() * 9000
