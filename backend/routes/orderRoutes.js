@@ -21,7 +21,7 @@ router.post("/", async (req, res) => {
       userId,
       items,
       total,
-      compartmentPassword: generatePassword(), // ✅ AUTO GENERATE HERE
+      compartmentPassword: ""
     });
 
     res.json(order);
