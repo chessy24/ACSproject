@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import backendUrl from "../../config"; // adjust path if needed
+import backendUrl from "../../config";
 
 function Orders() {
   const [orders, setOrders] = useState([]);
@@ -10,7 +10,21 @@ function Orders() {
       try {
         const res = await fetch(`${backendUrl}/api/orders`);
         const data = await res.json();
-        setOrders(Array.isArray(data) ? data : []);
+
+        const safeData = Array.isArray(data) ? data : [];
+
+        // 🔥 AUTO GENERATE PASSWORD IF MISSING
+        const updated = safeData.map((order) => {
+          if (!order.compartmentPassword) {
+            return {
+              ...order,
+              compartmentPassword: generate4DigitPassword(),
+            };
+          }
+          return order;
+        });
+
+        setOrders(updated);
       } catch (err) {
         console.log(err);
         setOrders([]);
@@ -19,6 +33,11 @@ function Orders() {
 
     fetchOrders();
   }, []);
+
+  // 🔥 4-digit generator
+  const generate4DigitPassword = () => {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  };
 
   const updateOrder = async (id, updates) => {
     try {
@@ -41,6 +60,24 @@ function Orders() {
     }
   };
 
+  const handleAssignCompartment = (order, value) => {
+    const password =
+      order.compartmentPassword || generate4DigitPassword();
+
+    updateOrder(order._id, {
+      compartment: value,
+      compartmentPassword: password,
+    });
+
+    setOrders((prev) =>
+      prev.map((o) =>
+        o._id === order._id
+          ? { ...o, compartment: value, compartmentPassword: password }
+          : o
+      )
+    );
+  };
+
   const statusOptions = ["Pending", "Shipped", "Delivered"];
   const compartmentOptions = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
@@ -49,18 +86,19 @@ function Orders() {
       <h1 style={styles.title}>Admin Orders</h1>
 
       {orders.map((order) => (
-        <div key={order?._id || index} style={styles.card}>
+        <div key={order._id} style={styles.card}>
 
           <div style={styles.header}>
             <div>
               <p>Order #{order?._id?.slice(-6) || "N/A"}</p>
               <p>Total: ₱{order.total}</p>
+              <p style={styles.password}>
+                Password: {order.compartmentPassword}
+              </p>
             </div>
 
             <div style={styles.badges}>
-              <span style={styles.badge}>
-                {order.status}
-              </span>
+              <span style={styles.badge}>{order.status}</span>
               <span style={styles.comp}>
                 Compartment #{order.compartment || "—"}
               </span>
@@ -84,7 +122,7 @@ function Orders() {
           <select
             value={order.compartment || ""}
             onChange={(e) =>
-              updateOrder(order._id, { compartment: e.target.value })
+              handleAssignCompartment(order, e.target.value)
             }
             style={styles.select}
           >
@@ -95,37 +133,6 @@ function Orders() {
               </option>
             ))}
           </select>
-
-          {/* COMPARTMENT PASSWORD */}
-          <input
-            type="text"
-            placeholder="Compartment Password"
-            value={passwordInputs[order._id] ?? order.compartmentPassword ?? ""}
-            onChange={(e) =>
-              setPasswordInputs((prev) => ({
-                ...prev,
-                [order._id]: e.target.value,
-              }))
-            }
-            onBlur={() => {
-  const password = passwordInputs[order._id] ?? "";
-
-  if (password.trim() === "") return;
-
-  updateOrder(order._id, {
-    compartmentPassword: password,
-  });
-
-  // 🔥 keep UI in sync
-  setOrders((prev) =>
-    prev.map((o) =>
-      o._id === order._id
-        ? { ...o, compartmentPassword: password }
-        : o
-    )
-  );
-}}
-          />
 
           {/* ITEMS */}
           <div>
@@ -148,6 +155,7 @@ function Orders() {
 
 export default Orders;
 
+/* STYLES */
 const styles = {
   page: { padding: "30px", background: "#f3f4f6", minHeight: "100vh" },
 
@@ -200,19 +208,14 @@ const styles = {
     borderRadius: "8px",
   },
 
-  input: {
-    marginTop: "8px",
-    padding: "8px",
-    width: "200px",
-    border: "1px solid #ccc",
-    borderRadius: "6px",
-  },
   password: {
     fontSize: "12px",
     background: "#111827",
     color: "white",
     padding: "4px 8px",
     borderRadius: "10px",
+    marginTop: "5px",
+    display: "inline-block",
   },
 
   img: { width: "40px", height: "40px", borderRadius: "6px" },
