@@ -69,7 +69,7 @@ router.get("/", async (req, res) => {
 ========================= */
 router.put("/:id/status", async (req, res) => {
   try {
-    const { status, compartment, compartmentPassword } = req.body;
+    const { status, compartment } = req.body;
 
     const order = await Order.findById(req.params.id);
 
@@ -84,16 +84,18 @@ router.put("/:id/status", async (req, res) => {
           $inc: { stock: -item.quantity },
         });
       }
+
+      // 🔥 GENERATE PASSWORD ONLY WHEN FIRST MARKED AS DELIVERED
+      order.compartmentPassword =
+        Math.floor(1000 + Math.random() * 9000).toString();
     }
 
+    // update status
     order.status = status ?? order.status;
 
+    // update compartment if provided
     if (compartment !== undefined) {
       order.compartment = compartment;
-    }
-
-    if (compartmentPassword !== undefined) {
-      order.compartmentPassword = compartmentPassword;
     }
 
     await order.save();
