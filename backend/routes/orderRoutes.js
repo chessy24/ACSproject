@@ -77,23 +77,24 @@ router.put("/:id/status", async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // 🔥 STOCK DEDUCTION (ONLY ONCE WHEN DELIVERED)
+    // 🔥 STOCK DEDUCTION ONLY ON FIRST DELIVERY
     if (status === "Delivered" && order.status !== "Delivered") {
       for (const item of order.items) {
         await Product.findByIdAndUpdate(item.productId, {
           $inc: { stock: -item.quantity },
         });
       }
-
-      // 🔥 GENERATE PASSWORD ONLY WHEN FIRST MARKED AS DELIVERED
-      order.compartmentPassword =
-        Math.floor(1000 + Math.random() * 9000).toString();
     }
 
-    // update status
+    // 🔥 ONLY GENERATE PASSWORD IF EMPTY (NEVER REGEN)
+    if (!order.compartmentPassword && status === "Delivered") {
+      order.compartmentPassword = Math.floor(
+        1000 + Math.random() * 9000
+      ).toString();
+    }
+
     order.status = status ?? order.status;
 
-    // update compartment if provided
     if (compartment !== undefined) {
       order.compartment = compartment;
     }
