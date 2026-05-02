@@ -12,10 +12,16 @@ router.post("/", async (req, res) => {
   try {
     const { userId, items, total } = req.body;
 
+    // 🔥 generate 4-digit password here
+    const generatePassword = () => {
+      return Math.floor(1000 + Math.random() * 9000).toString();
+    };
+
     const order = await Order.create({
       userId,
       items,
       total,
+      compartmentPassword: generatePassword(), // ✅ AUTO GENERATE HERE
     });
 
     res.json(order);
