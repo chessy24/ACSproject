@@ -9,6 +9,7 @@ import AdminProducts from "./admin/pages/Products";
 import Concerns from "./admin/pages/Concerns";
 import Payments from "./admin/pages/AdminPayments";
 import AdminLogin from "./admin/pages/AdminLogin";
+import SalesReport from "./admin/pages/SalesReport";
 
 function App() {
   const [isAdmin, setIsAdmin] = useState(() => {
@@ -55,6 +56,7 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="concerns" element={<Concerns />} />
           <Route path="payments" element={<Payments />} />
+          <Route path="sales-report" element={<SalesReport />} />
         </Route>
 
       </Routes>

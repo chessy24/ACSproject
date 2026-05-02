@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, ShoppingCart, Package, MessageSquare, CreditCard } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Package, MessageSquare, CreditCard, BarChart3 } from "lucide-react";
 import png from "../../assets/about-image.png";
 
 
@@ -95,7 +95,8 @@ export default function Sidebar({ open, setOpen }) {
           ...(isActive("/admin/sales-report") ? styles.active : {}),
         }}
       >
-        📊 Sales Report
+        <BarChart3 size={18} />
+        Sales Report
       </Link>
 
     </div>
