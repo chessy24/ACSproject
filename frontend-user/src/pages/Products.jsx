@@ -25,6 +25,12 @@ function Products() {
   }, []);
 
   // ADD TO CART
+  const getCartQuantity = (productId) => {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const item = cart.find(i => i.productId === productId);
+    return item ? item.quantity : 0;
+  };
+
   const addToCart = (product) => {
     const token = localStorage.getItem("token");
 
@@ -38,8 +44,18 @@ function Products() {
     const exists = cart.find(item => item.productId === product._id);
 
     if (exists) {
+      if (exists.quantity >= product.stock) {
+        alert("Stock limit reached!");
+        return;
+      }
+
       exists.quantity += 1;
     } else {
+      if (product.stock <= 0) {
+        alert("Out of stock!");
+        return;
+      }
+
       cart.push({
         productId: product._id,
         name: product.name,
@@ -113,44 +129,51 @@ function Products() {
 
       {/* PRODUCTS */}
       <div style={styles.grid}>
-        {filteredProducts.map((p) => (
-          <div key={p._id} style={styles.card}>
-            <img
-              src={p.image}
-              alt={p.name}
-              style={{ ...styles.image, cursor: "pointer" }}
-              onClick={() => setSelectedImage(p.image)}
-            />
+        {filteredProducts.map((p) => {
+          const currentQty = getCartQuantity(p._id);
+          const isMaxed = currentQty >= p.stock;
 
-            <h3 style={styles.name}>{p.name}</h3>
-            <p style={styles.price}>₱{p.price}</p>
-            <p style={styles.category}>{p.category}</p>
+          return (
+            <div key={p._id} style={styles.card}>
+              <img
+                src={p.image}
+                alt={p.name}
+                style={{ ...styles.image, cursor: "pointer" }}
+                onClick={() => setSelectedImage(p.image)}
+              />
 
-            <p style={styles.description}>{p.description}</p>
+              <h3 style={styles.name}>{p.name}</h3>
+              <p style={styles.price}>₱{p.price}</p>
+              <p style={styles.category}>{p.category}</p>
 
-            <p style={styles.stock}>Stock: {p.stock}</p>
+              <p style={styles.description}>{p.description}</p>
 
-            <button
-              disabled={p.stock === 0}
-              onClick={() => addToCart(p)}
-              style={{
-                ...styles.button,
-                background: p.stock === 0
-                  ? "#9ca3af"
-                  : added[p._id]
-                    ? "#2563eb"
-                    : "#22c55e",
-                cursor: p.stock === 0 ? "not-allowed" : "pointer"
-              }}
-            >
-              {p.stock === 0
-                ? "Out of Stock"
-                : added[p._id]
-                  ? "Added ✔"
-                  : "Add to Cart"}
-            </button>
-          </div>
-        ))}
+              <p style={styles.stock}>Stock: {p.stock}</p>
+
+              <button
+                disabled={p.stock === 0 || isMaxed}
+                onClick={() => addToCart(p)}
+                style={{
+                  ...styles.button,
+                  background: p.stock === 0 || isMaxed
+                    ? "#9ca3af"
+                    : added[p._id]
+                      ? "#2563eb"
+                      : "#22c55e",
+                  cursor: p.stock === 0 || isMaxed ? "not-allowed" : "pointer"
+                }}
+              >
+                {p.stock === 0
+                  ? "Out of Stock"
+                  : isMaxed
+                    ? "Max Reached"
+                    : added[p._id]
+                      ? "Added ✔"
+                      : "Add to Cart"}
+              </button>
+            </div>
+          );
+        })}
       </div>
       {selectedImage && (
         <div style={styles.modalOverlay} onClick={() => setSelectedImage(null)}>
