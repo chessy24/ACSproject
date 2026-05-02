@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import Payment from "../models/Payment.js";
@@ -13,26 +14,23 @@ router.post("/", async (req, res) => {
   try {
     const { userId, items, total } = req.body;
 
-    // 🔥 generate 4-digit password here
-    const generatePassword = () => {
-      return Math.floor(1000 + Math.random() * 9000).toString();
-    };
-
     const order = await Order.create({
       userId,
       items,
       total,
-      compartmentPassword: ""
+      status: "Pending",
+      compartment: "",
+      compartmentPassword: "",
     });
 
     res.json(order);
   } catch (err) {
-    res.status(500).json({ message: "Order error", err });
+    res.status(500).json({ message: "Order error", error: err.message });
   }
 });
 
 /* =========================
-   SPECIAL ROUTE (PUT THIS FIRST)
+   SPECIAL ROUTE
 ========================= */
 router.get("/user-with-payments/:userId", getUserOrdersWithPayments);
 
@@ -42,7 +40,7 @@ router.get("/user-with-payments/:userId", getUserOrdersWithPayments);
 router.get("/:userId", async (req, res) => {
   try {
     const orders = await Order.find({ userId: req.params.userId })
-      .populate("userId", "name email"); // 🔥 ADD USER NAME HERE
+      .populate("userId", "name email");
 
     res.json(orders);
   } catch (err) {
@@ -52,21 +50,36 @@ router.get("/:userId", async (req, res) => {
 
 /* =========================
    GET ALL ORDERS (ADMIN)
+   + PAYMENT STATUS FIX
 ========================= */
 router.get("/", async (req, res) => {
   try {
     const orders = await Order.find()
       .sort({ createdAt: -1 })
-      .populate("userId", "name email"); // 🔥 ADD USER NAME HERE
+      .populate("userId", "name email");
 
-    res.json(orders);
+    const ordersWithPayments = await Promise.all(
+      orders.map(async (order) => {
+        const payment = await Payment.findOne({
+          orderId: order._id,
+          status: "Approved",
+        });
+
+        return {
+          ...order.toObject(),
+          paymentStatus: payment ? "Approved" : "Pending",
+        };
+      })
+    );
+
+    res.json(ordersWithPayments);
   } catch (err) {
     res.status(500).json({ message: "Fetch all orders error" });
   }
 });
 
 /* =========================
-   UPDATE ORDER STATUS (ADMIN)
+   UPDATE ORDER STATUS
 ========================= */
 router.put("/:id/status", async (req, res) => {
   try {
@@ -78,25 +91,25 @@ router.put("/:id/status", async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // =========================
-    // 🔒 BLOCK DELIVERY IF NOT PAID
-    // =========================
+    /* =========================
+       PAYMENT CHECK
+    ========================= */
     if (status === "Delivered") {
       const payment = await Payment.findOne({
-        orderId: new mongoose.Types.ObjectId(order._id), // 🔥 FORCE MATCH
-        status: "Approved", // ✅ FILTER HERE
+        orderId: order._id,
+        status: "Approved",
       });
 
-      if (!payment || payment.status !== "Approved") {
+      if (!payment) {
         return res.status(400).json({
           message: "Cannot deliver: Payment not approved",
         });
       }
     }
 
-    // =========================
-    // 📦 STOCK DEDUCTION (SAFE NOW)
-    // =========================
+    /* =========================
+       STOCK DEDUCTION
+    ========================= */
     if (status === "Delivered" && order.status !== "Delivered") {
       for (const item of order.items) {
         await Product.findByIdAndUpdate(item.productId, {
@@ -105,9 +118,9 @@ router.put("/:id/status", async (req, res) => {
       }
     }
 
-    // =========================
-    // 🔐 PASSWORD GENERATION
-    // =========================
+    /* =========================
+       COMPARTMENT PASSWORD
+    ========================= */
     if (!order.compartmentPassword && status === "Delivered") {
       order.compartmentPassword = Math.floor(
         1000 + Math.random() * 9000
@@ -125,7 +138,10 @@ router.put("/:id/status", async (req, res) => {
     res.json(order);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Update failed", error: err.message });
+    res.status(500).json({
+      message: "Update failed",
+      error: err.message,
+    });
   }
 });
 
