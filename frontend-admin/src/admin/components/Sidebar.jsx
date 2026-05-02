@@ -88,6 +88,16 @@ export default function Sidebar({ open, setOpen }) {
         Payments
       </Link>
 
+      <Link
+        to="/admin/sales-report"
+        style={{
+          ...styles.item,
+          ...(isActive("/admin/sales-report") ? styles.active : {}),
+        }}
+      >
+        📊 Sales Report
+      </Link>
+
     </div>
   );
 }
