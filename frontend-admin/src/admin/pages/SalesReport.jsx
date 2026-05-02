@@ -62,7 +62,7 @@ export default function SalesReport() {
 
   return (
     <div style={styles.page}>
-      <h1 style={styles.title}>📊 Sales Report</h1>
+      <h1 style={{ color: "#000" }}>📊 Sales Report</h1>
 
       {/* FILTER BAR */}
       <div style={styles.filterBox}>
@@ -109,7 +109,7 @@ export default function SalesReport() {
 
             {/* CHART */}
             <div style={styles.chartBox}>
-              <h2>Revenue Analytics</h2>
+              <h2 style={{ color: "#000" }}>Revenue Analytics</h2>
 
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={chartData}>
@@ -130,7 +130,8 @@ export default function SalesReport() {
 
             {/* TOP PRODUCTS */}
             <div style={styles.section}>
-              <h2>🔥 Top Products</h2>
+              <h2 style={{ color: "#000" }}>🔥 Top Products</h2>
+
               {report.topProducts.map((p, i) => (
                 <div key={i} style={styles.productItem}>
                   {p.name} <span>({p.qty} sold)</span>
@@ -140,7 +141,7 @@ export default function SalesReport() {
 
             {/* ORDERS TABLE */}
             <div style={styles.section}>
-              <h2>📦 Orders</h2>
+              <h2 style={{ color: "#000" }}>📦 Orders</h2>
               {report.orders.map((o) => (
                 <div key={o._id} style={styles.orderItem}>
                   <span>#{o._id.slice(-6)}</span>
