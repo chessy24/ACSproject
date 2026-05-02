@@ -3,7 +3,6 @@ import backendUrl from "../../config";
 
 function Orders() {
   const [orders, setOrders] = useState([]);
-  const [passwordInputs, setPasswordInputs] = useState({});
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -11,20 +10,7 @@ function Orders() {
         const res = await fetch(`${backendUrl}/api/orders`);
         const data = await res.json();
 
-        const safeData = Array.isArray(data) ? data : [];
-
-        // 🔥 AUTO GENERATE PASSWORD IF MISSING
-        const updated = safeData.map((order) => {
-          if (!order.compartmentPassword) {
-            return {
-              ...order,
-              compartmentPassword: generate4DigitPassword(),
-            };
-          }
-          return order;
-        });
-
-        setOrders(updated);
+        setOrders(Array.isArray(data) ? data : []);
       } catch (err) {
         console.log(err);
         setOrders([]);
@@ -33,11 +19,6 @@ function Orders() {
 
     fetchOrders();
   }, []);
-
-  // 🔥 4-digit generator
-  const generate4DigitPassword = () => {
-    return Math.floor(1000 + Math.random() * 9000).toString();
-  };
 
   const updateOrder = async (id, updates) => {
     try {
@@ -61,21 +42,10 @@ function Orders() {
   };
 
   const handleAssignCompartment = (order, value) => {
-    const password =
-      order.compartmentPassword || generate4DigitPassword();
-
     updateOrder(order._id, {
       compartment: value,
-      compartmentPassword: password,
+      compartmentPassword: order.compartmentPassword, // 🔥 keep backend-generated password
     });
-
-    setOrders((prev) =>
-      prev.map((o) =>
-        o._id === order._id
-          ? { ...o, compartment: value, compartmentPassword: password }
-          : o
-      )
-    );
   };
 
   const statusOptions = ["Pending", "Shipped", "Delivered"];
@@ -90,10 +60,15 @@ function Orders() {
 
           <div style={styles.header}>
             <div>
+              {/* 🔥 USER INFO (NOW WORKS BECAUSE OF POPULATE) */}
+              <p>User: {order.userId?.name || "Unknown"}</p>
+              <p>Email: {order.userId?.email || "—"}</p>
+
               <p>Order #{order?._id?.slice(-6) || "N/A"}</p>
               <p>Total: ₱{order.total}</p>
+
               <p style={styles.password}>
-                Password: {order.compartmentPassword}
+                Password: {order.compartmentPassword || "—"}
               </p>
             </div>
 
@@ -157,9 +132,16 @@ export default Orders;
 
 /* STYLES */
 const styles = {
-  page: { padding: "30px", background: "#f3f4f6", minHeight: "100vh" },
+  page: {
+    padding: "30px",
+    background: "#f3f4f6",
+    minHeight: "100vh",
+  },
 
-  title: { fontSize: "28px", fontWeight: "700" },
+  title: {
+    fontSize: "28px",
+    fontWeight: "700",
+  },
 
   card: {
     background: "#fff",
@@ -218,5 +200,9 @@ const styles = {
     display: "inline-block",
   },
 
-  img: { width: "40px", height: "40px", borderRadius: "6px" },
+  img: {
+    width: "40px",
+    height: "40px",
+    borderRadius: "6px",
+  },
 };
