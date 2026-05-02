@@ -97,4 +97,29 @@ router.put("/:id/restock", async (req, res) => {
   }
 });
 
+/* =========================
+   UPDATE PRODUCT (EDIT DETAILS)
+========================= */
+router.put("/:id", async (req, res) => {
+  try {
+    const { name, price, description, category } = req.body;
+
+    const updated = await Product.findByIdAndUpdate(
+      req.params.id,
+      {
+        name,
+        price,
+        description,
+        category,
+      },
+      { new: true }
+    );
+
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Update failed" });
+  }
+});
+
 export default router;

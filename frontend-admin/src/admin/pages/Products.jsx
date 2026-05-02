@@ -62,6 +62,28 @@ function AdminProducts() {
     }
   };
 
+  const handleUpdatePrice = async (id) => {
+  const newPrice = restockValues[`price-${id}`];
+
+  if (!newPrice) return alert("Enter new price");
+
+  try {
+    await fetch(`${backendUrl}/api/products/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        price: Number(newPrice),
+      }),
+    });
+
+    fetchProducts();
+  } catch (err) {
+    console.log(err);
+  }
+};
+
   // SUBMIT (🔥 REAL CLOUDINARY FLOW)
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -224,7 +246,22 @@ function AdminProducts() {
               />
               <div style={styles.cardBody}>
                 <h3 style={styles.cardTitle}>{p.name}</h3>
-                <p style={styles.cardPrice}>₱{p.price}</p>
+                <input
+  type="number"
+  value={restockValues[`price-${p._id}`] ?? p.price}
+  onChange={(e) =>
+    setRestockValues({
+      ...restockValues,
+      [`price-${p._id}`]: e.target.value,
+    })
+  }
+  style={{
+    width: "100%",
+    padding: "6px",
+    borderRadius: "6px",
+    marginTop: "5px"
+  }}
+/>
                 <p style={styles.cardCategory}>{p.category}</p>
                 <p style={styles.cardDescription}>
                   {p.description}
@@ -266,6 +303,23 @@ function AdminProducts() {
                 >
                   Restock 🔄
                 </button>
+
+                <button
+  style={{
+    marginTop: "5px",
+    width: "100%",
+    padding: "8px",
+    background: "#f59e0b",
+    border: "none",
+    color: "white",
+    borderRadius: "8px",
+    fontWeight: "bold",
+    cursor: "pointer",
+  }}
+  onClick={() => handleUpdatePrice(p._id)}
+>
+  Update Price 💰
+</button>
 
                 <button
                   style={styles.deleteBtn}
