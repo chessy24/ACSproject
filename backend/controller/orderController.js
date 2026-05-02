@@ -1,47 +1,44 @@
 import Order from "../models/Order.js";
 import Payment from "../models/Payment.js";
 import Product from "../models/Product.js";
-import Stock from "../models/Stock.js";
 
 /* =========================
-   CREATE ORDER (SAFE)
+   CREATE ORDER (EMBEDDED STOCK)
 ========================= */
 export const createOrder = async (req, res) => {
   try {
     const { userId, items, total } = req.body;
 
-    // 🔥 VALIDATE STOCK FIRST
+    // ✅ 1. CHECK STOCK FIRST
     for (let item of items) {
-      const product = await Product.findById(item.productId).populate("stock");
+      const product = await Product.findById(item.productId);
 
-      if (!product || !product.stock) {
-        return res.status(400).json({
-          message: `Product not found`
+      if (!product) {
+        return res.status(404).json({
+          message: "Product not found",
         });
       }
 
-      if (item.quantity > product.stock.quantity) {
+      if (item.quantity > product.stock) {
         return res.status(400).json({
-          message: `Not enough stock for ${product.name}`
+          message: `Not enough stock for ${product.name}`,
         });
       }
     }
 
-    // 🔥 DEDUCT STOCK
+    // ✅ 2. DEDUCT STOCK
     for (let item of items) {
-      const product = await Product.findById(item.productId).populate("stock");
-
-      await Stock.findByIdAndUpdate(product.stock._id, {
-        $inc: { quantity: -item.quantity }
+      await Product.findByIdAndUpdate(item.productId, {
+        $inc: { stock: -item.quantity },
       });
     }
 
-    // ✅ CREATE ORDER
+    // ✅ 3. CREATE ORDER
     const newOrder = new Order({
       userId,
       items,
       total,
-      status: "Pending"
+      status: "Pending",
     });
 
     await newOrder.save();
