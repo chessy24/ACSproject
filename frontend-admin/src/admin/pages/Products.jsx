@@ -129,6 +129,36 @@ function AdminProducts() {
     fetchProducts();
   };
 
+  const updateProductImage = async (id) => {
+  const file = imageUpdateFile[id];
+
+  if (!file) {
+    return alert("Please select an image first");
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const res = await fetch(`${backendUrl}/api/products/${id}`, {
+      method: "PUT",
+      body: formData,
+    });
+
+    if (res.ok) {
+      setToast("Image updated successfully 🖼️");
+      setTimeout(() => setToast(""), 2000);
+
+      fetchProducts(); // refresh list
+    } else {
+      setToast("Failed to update image ❌");
+      setTimeout(() => setToast(""), 2000);
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
   const archiveProduct = async (id) => {
     const confirmArchive = window.confirm(
       "Are you sure you want to archive this product?"
