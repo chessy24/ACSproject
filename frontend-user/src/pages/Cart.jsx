@@ -1,20 +1,25 @@
 import { useEffect, useState } from "react";
-import backendUrl from "../../config"; // adjust path if needed
+import backendUrl from "../../config";
 
 export default function Cart() {
   const [cart, setCart] = useState([]);
+  const [hasID, setHasID] = useState(false);
 
-  // LOAD CART
+  // LOAD CART + CHECK USER ID
   useEffect(() => {
     const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
+    const user = JSON.parse(localStorage.getItem("user"));
 
     const fixedCart = storedCart.map((item) => ({
       ...item,
       quantity: item.quantity || 1,
-      stock: Number(item.stock) || 999, // safety fix
+      stock: Number(item.stock) || 999,
     }));
 
     setCart(fixedCart);
+
+    // 🔥 CHECK IF USER HAS ID IMAGE
+    setHasID(!!user?.idImage);
   }, []);
 
   // REMOVE ITEM
@@ -28,18 +33,13 @@ export default function Cart() {
   const updateQuantity = (id, action) => {
     const updated = cart.map((item) => {
       if (item.productId === id) {
-
         if (action === "inc") {
-  const maxStock = item.stock;
-
-  const currentInCart = item.quantity;
-
-  if (currentInCart < maxStock) {
-    item.quantity += 1;
-  } else {
-    alert("Only " + maxStock + " stock available");
-  }
-}
+          if (item.quantity < item.stock) {
+            item.quantity += 1;
+          } else {
+            alert("Only " + item.stock + " stock available");
+          }
+        }
 
         if (action === "dec" && item.quantity > 1) {
           item.quantity -= 1;
@@ -60,6 +60,12 @@ export default function Cart() {
 
   // CHECKOUT
   const handleCheckout = async () => {
+    // 🚫 BLOCK IF NO ID
+    if (!hasID) {
+      alert("⚠️ You must upload a valid ID before checkout.");
+      return;
+    }
+
     try {
       const user = JSON.parse(localStorage.getItem("user"));
 
@@ -76,16 +82,16 @@ export default function Cart() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-  userId,
-  items: cart.map(item => ({
-    productId: item.productId,
-    name: item.name,
-    price: item.price,
-    image: item.image,
-    quantity: item.quantity
-  })),
-  total: totalPrice,
-}),
+          userId,
+          items: cart.map((item) => ({
+            productId: item.productId,
+            name: item.name,
+            price: item.price,
+            image: item.image,
+            quantity: item.quantity,
+          })),
+          total: totalPrice,
+        }),
       });
 
       const data = await res.json();
@@ -119,29 +125,22 @@ export default function Cart() {
           <div style={styles.grid}>
             {cart.map((item, index) => (
               <div key={index} style={styles.card}>
-
-                {/* LEFT SIDE */}
                 <div style={styles.left}>
                   <img src={item.image} style={styles.img} />
 
                   <div style={styles.info}>
                     <h3 style={styles.name}>{item.name}</h3>
 
-                    {/* QUANTITY CONTROLS */}
                     <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                       <button onClick={() => updateQuantity(item.productId, "dec")}>-</button>
                       <span>{item.quantity}</span>
                       <button onClick={() => updateQuantity(item.productId, "inc")}>+</button>
                     </div>
-
                   </div>
                 </div>
 
-                {/* RIGHT SIDE */}
                 <div style={styles.right}>
-                  <p style={styles.itemPrice}>
-                    ₱{item.price * item.quantity}
-                  </p>
+                  <p style={styles.itemPrice}>₱{item.price * item.quantity}</p>
 
                   <button
                     style={styles.removeBtn}
@@ -150,7 +149,6 @@ export default function Cart() {
                     Remove
                   </button>
                 </div>
-
               </div>
             ))}
           </div>
@@ -161,11 +159,23 @@ export default function Cart() {
               <div style={{ textAlign: "right" }}>
                 <p style={styles.label}>Total Price</p>
                 <h2 style={styles.totalPrice}>₱{totalPrice}</h2>
+
+                {/* ⚠️ WARNING */}
+                {!hasID && (
+                  <p style={styles.warning}>
+                    ⚠️ Upload a valid ID during registration to enable checkout
+                  </p>
+                )}
               </div>
 
               <button
-                style={styles.checkoutBtn}
+                style={{
+                  ...styles.checkoutBtn,
+                  background: hasID ? "#021150" : "#ccc",
+                  cursor: hasID ? "pointer" : "not-allowed",
+                }}
                 onClick={handleCheckout}
+                disabled={!hasID}
               >
                 Checkout
               </button>
@@ -293,10 +303,14 @@ const styles = {
   checkoutBtn: {
     padding: "10px 18px",
     border: "none",
-    background: "#021150",
     color: "white",
     borderRadius: "8px",
-    cursor: "pointer",
     fontWeight: "bold",
+  },
+
+  warning: {
+    color: "red",
+    fontSize: "12px",
+    marginTop: "5px",
   },
 };

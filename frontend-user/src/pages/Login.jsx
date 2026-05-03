@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import backendUrl from "../../config"; // adjust path if needed
+import backendUrl from "../../config";
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,24 +10,29 @@ export default function Login() {
     name: "",
     email: "",
     password: "",
+    idImage: null,
   });
 
-  const isValidRTUEmail = (email) => {
-    return email.endsWith("@rtu.edu.ph");
-  };
+  const [idWarning, setIdWarning] = useState(false);
 
   const navigate = useNavigate();
 
   // INPUT CHANGE
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value, files } = e.target;
+
+    if (name === "idImage") {
+      setForm({ ...form, idImage: files[0] });
+      setIdWarning(false); // remove warning when file is uploaded
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   // SUBMIT LOGIN / REGISTER
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 🔥 EMAIL VALIDATION (FRONTEND)
     if (!isLogin && !form.email.endsWith("@rtu.edu.ph")) {
       return alert("Only @rtu.edu.ph emails are allowed to register");
     }
@@ -36,22 +41,41 @@ export default function Login() {
       ? `${backendUrl}/api/auth/login`
       : `${backendUrl}/api/auth/register`;
 
-    const payload = isLogin
-      ? {
-        email: form.email,
-        password: form.password,
-      }
-      : form;
-
     try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      let options;
 
+      if (isLogin) {
+        // LOGIN
+        options = {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: form.email,
+            password: form.password,
+          }),
+        };
+      } else {
+        // SIGNUP (FORMDATA)
+        const formData = new FormData();
+        formData.append("name", form.name);
+        formData.append("email", form.email);
+        formData.append("password", form.password);
+
+        if (form.idImage) {
+          formData.append("idImage", form.idImage);
+        } else {
+          setIdWarning(true); // ⚠️ warning if no ID uploaded
+        }
+
+        options = {
+          method: "POST",
+          body: formData,
+        };
+      }
+
+      const res = await fetch(url, options);
       const data = await res.json();
 
       if (!res.ok) {
@@ -106,7 +130,7 @@ export default function Login() {
         {/* FORM */}
         <form onSubmit={handleSubmit} style={styles.form}>
 
-          {/* NAME (ONLY SIGNUP) */}
+          {/* NAME */}
           {!isLogin && (
             <div style={styles.inputWrapper}>
               <input
@@ -149,21 +173,35 @@ export default function Login() {
             </span>
           </div>
 
+          {/* ID UPLOAD */}
+          {!isLogin && (
+            <div style={styles.inputWrapper}>
+              <input
+                type="file"
+                name="idImage"
+                accept="image/*"
+                onChange={handleChange}
+              />
+
+              {idWarning && (
+                <p style={styles.warning}>
+                  ⚠️ No ID uploaded. Orders may be ignored.
+                </p>
+              )}
+            </div>
+          )}
+
           {/* SUBMIT */}
           <button style={styles.button}>
             {isLogin ? "Login" : "Create Account"}
           </button>
 
           <p
-            onClick={() => window.location.href = "https://admin.acsonline.shop/admin-login"}
-            style={{
-              marginTop: "10px",
-              textAlign: "center",
-              color: "#021150",
-              cursor: "pointer",
-              textDecoration: "underline",
-              fontSize: "14px",
-            }}
+            onClick={() =>
+              (window.location.href =
+                "https://admin.acsonline.shop/admin-login")
+            }
+            style={styles.adminText}
           >
             Are you an admin?
           </p>
@@ -213,26 +251,19 @@ const styles = {
   input: {
     width: "100%",
     padding: "10px",
-    paddingRight: "40px", // 👈 space for eye icon
+    paddingRight: "40px",
     borderRadius: "6px",
     border: "1px solid #ccc",
-    boxSizing: "border-box", // 👈 VERY IMPORTANT (fix alignment)
-  },
-
-  passwordBox: {
-    position: "relative",
-    display: "flex",
-    alignItems: "center",
+    boxSizing: "border-box",
   },
 
   eye: {
     position: "absolute",
     right: "10px",
-    top: "50%",                 // 👈 center vertically
+    top: "50%",
     transform: "translateY(-50%)",
     cursor: "pointer",
     fontSize: "18px",
-    userSelect: "none",
   },
 
   button: {
@@ -243,17 +274,24 @@ const styles = {
     borderRadius: "6px",
     cursor: "pointer",
   },
-  adminBtn: {
-    marginTop: "5px",
-    padding: "10px",
-    background: "#64748b",
-    color: "white",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-  },
+
   inputWrapper: {
-    position: "relative", // 👈 THIS IS THE FIX
+    position: "relative",
     width: "100%",
+  },
+
+  warning: {
+    fontSize: "12px",
+    color: "red",
+    marginTop: "5px",
+  },
+
+  adminText: {
+    marginTop: "10px",
+    textAlign: "center",
+    color: "#021150",
+    cursor: "pointer",
+    textDecoration: "underline",
+    fontSize: "14px",
   },
 };
