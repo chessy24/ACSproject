@@ -129,31 +129,27 @@ function AdminProducts() {
     fetchProducts();
   };
 
-  const updateProductImage = async (id) => {
+ const updateProductImage = async (id) => {
   const file = imageUpdateFile[id];
 
   if (!file) {
-    return alert("Please select an image first");
+    alert("Please select an image first");
+    return;
   }
 
-  try {
-    const formData = new FormData();
-    formData.append("image", file);
+  const formData = new FormData();
+  formData.append("image", file);
 
+  try {
     const res = await fetch(`${backendUrl}/api/products/${id}`, {
       method: "PUT",
-      body: formData,
+      body: formData, // IMPORTANT
     });
 
-    if (res.ok) {
-      setToast("Image updated successfully 🖼️");
-      setTimeout(() => setToast(""), 2000);
+    if (!res.ok) throw new Error("Upload failed");
 
-      fetchProducts(); // refresh list
-    } else {
-      setToast("Failed to update image ❌");
-      setTimeout(() => setToast(""), 2000);
-    }
+    fetchProducts(); // refresh list
+    alert("Image updated!");
   } catch (err) {
     console.log(err);
   }
