@@ -7,19 +7,32 @@ import streamifier from "streamifier";
 const router = express.Router();
 
 /* =========================
-   GET ALL PRODUCTS (NOT ARCHIVED)
+   GET ALL ACTIVE PRODUCTS
 ========================= */
 router.get("/", async (req, res) => {
   try {
     const products = await Product.find({
-      $or: [
-        { isArchived: false },
-        { isArchived: { $exists: false } }
-      ]
+      isArchived: { $ne: true } // clean + reliable
     });
+
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch products" });
+  }
+});
+
+/* =========================
+   GET ARCHIVED PRODUCTS
+========================= */
+router.get("/archived", async (req, res) => {
+  try {
+    const products = await Product.find({
+      isArchived: true
+    });
+
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch archived products" });
   }
 });
 
@@ -46,6 +59,7 @@ router.post("/", upload.single("image"), async (req, res) => {
           category: req.body.category,
           stock: Number(req.body.stock || 0),
           image: result.secure_url,
+          isArchived: false, // 🔥 IMPORTANT DEFAULT
         });
 
         res.json(product);
@@ -60,13 +74,13 @@ router.post("/", upload.single("image"), async (req, res) => {
 });
 
 /* =========================
-   ARCHIVE PRODUCT (REPLACES DELETE)
+   ARCHIVE PRODUCT
 ========================= */
 router.put("/:id/archive", async (req, res) => {
   try {
     const updated = await Product.findByIdAndUpdate(
       req.params.id,
-      { isArchived: true },
+      { $set: { isArchived: true } },
       { new: true }
     );
 
@@ -77,13 +91,13 @@ router.put("/:id/archive", async (req, res) => {
 });
 
 /* =========================
-   RESTORE PRODUCT (OPTIONAL)
+   RESTORE PRODUCT
 ========================= */
 router.put("/:id/restore", async (req, res) => {
   try {
     const updated = await Product.findByIdAndUpdate(
       req.params.id,
-      { isArchived: false },
+      { $set: { isArchived: false } },
       { new: true }
     );
 
@@ -102,9 +116,7 @@ router.put("/:id/restock", async (req, res) => {
 
     const updated = await Product.findByIdAndUpdate(
       req.params.id,
-      {
-        $inc: { stock: Number(amount) }
-      },
+      { $inc: { stock: Number(amount) } },
       { new: true }
     );
 
@@ -115,7 +127,7 @@ router.put("/:id/restock", async (req, res) => {
 });
 
 /* =========================
-   UPDATE PRODUCT DETAILS + IMAGE
+   UPDATE PRODUCT (WITH IMAGE)
 ========================= */
 router.put("/:id", upload.single("image"), async (req, res) => {
   try {
@@ -126,7 +138,6 @@ router.put("/:id", upload.single("image"), async (req, res) => {
       category: req.body.category,
     };
 
-    // ✅ IF NEW IMAGE PROVIDED → UPLOAD
     if (req.file) {
       const stream = cloudinary.uploader.upload_stream(
         { folder: "products" },
@@ -147,12 +158,9 @@ router.put("/:id", upload.single("image"), async (req, res) => {
         }
       );
 
-      return streamifier
-        .createReadStream(req.file.buffer)
-        .pipe(stream);
+      return streamifier.createReadStream(req.file.buffer).pipe(stream);
     }
 
-    // ✅ NO IMAGE UPDATE
     const updated = await Product.findByIdAndUpdate(
       req.params.id,
       updateData,
@@ -163,15 +171,6 @@ router.put("/:id", upload.single("image"), async (req, res) => {
 
   } catch (err) {
     res.status(500).json({ message: "Update failed" });
-  }
-});
-
-router.get("/archived", async (req, res) => {
-  try {
-    const products = await Product.find({ isArchived: true });
-    res.json(products);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch archived products" });
   }
 });
 
