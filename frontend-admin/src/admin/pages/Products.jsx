@@ -65,7 +65,7 @@ function AdminProducts() {
 
     const res = await fetch(
       "https://api.cloudinary.com/v1_1/dvgkqzin1/image/upload",
-      { 
+      {
         method: "POST",
         body: formData,
       }
@@ -191,13 +191,13 @@ function AdminProducts() {
   };
 
   const handleImageChange = (e) => {
-  const file = e.target.files[0];
-  setImageFile(file);
+    const file = e.target.files[0];
+    setImageFile(file);
 
-  if (file) {
-    setPreview(URL.createObjectURL(file));
-  }
-};
+    if (file) {
+      setPreview(URL.createObjectURL(file));
+    }
+  };
 
   const restoreProduct = async (id) => {
     await fetch(`${backendUrl}/api/products/${id}/restore`, {
@@ -451,7 +451,10 @@ function AdminProducts() {
                   }
                 />
 
-                <button onClick={() => updateProductImage(p._id)}>
+                <button
+                  type="button"
+                  onClick={() => updateProductImage(p._id)}
+                >
                   Update Image 🖼️
                 </button>
               </div>

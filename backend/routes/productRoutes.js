@@ -131,22 +131,29 @@ router.put("/:id/restock", async (req, res) => {
 ========================= */
 router.put("/:id", async (req, res) => {
   try {
+    const updateData = {};
+
+    if (req.body.name !== undefined) updateData.name = req.body.name;
+    if (req.body.price !== undefined) updateData.price = Number(req.body.price);
+    if (req.body.description !== undefined) updateData.description = req.body.description;
+    if (req.body.category !== undefined) updateData.category = req.body.category;
+    if (req.body.image !== undefined) updateData.image = req.body.image;
+
     const updated = await Product.findByIdAndUpdate(
       req.params.id,
-      {
-        name: req.body.name,
-        price: Number(req.body.price),
-        description: req.body.description,
-        category: req.body.category,
-        image: req.body.image, // 🔥 just URL now
-      },
+      updateData,
       { new: true }
     );
 
+    if (!updated) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
     res.json(updated);
+
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Update failed" });
+    console.log("UPDATE ERROR:", err);
+    res.status(500).json({ message: "Update failed", error: err.message });
   }
 });
 
