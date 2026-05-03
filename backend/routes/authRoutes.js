@@ -19,7 +19,6 @@ router.post("/register", upload.single("idImage"), async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // ✅ SAFE VALIDATION
     if (!name || !email || !password) {
       return res.status(400).json({ message: "Missing fields" });
     }
@@ -36,33 +35,29 @@ router.post("/register", upload.single("idImage"), async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // ✅ ID IMAGE FLAG (safe placeholder)
-    let idImage = "";
-
-    if (req.file) {
-      idImage = "uploaded"; // replace later with Cloudinary if needed
+    if (!req.file) {
+      return res.status(400).json({
+        message: "ID image is required",
+      });
     }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
-      idImage,
+      idImage: req.file.path, // 🔥 CLOUDINARY URL
     });
-
-    // ❗ DO NOT return password
-    const safeUser = {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      idImage: user.idImage,
-    };
 
     return res.status(201).json({
       message: "User created successfully",
-      user: safeUser,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        idImage: user.idImage,
+      },
     });
 
   } catch (err) {

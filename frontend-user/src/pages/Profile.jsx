@@ -4,6 +4,7 @@ import backendUrl from "../../config";
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showImage, setShowImage] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -62,13 +63,14 @@ export default function Profile() {
     <div style={styles.page}>
       <div style={styles.card}>
 
-        {/* PROFILE IMAGE OR AVATAR */}
+        {/* PROFILE IMAGE / ID BOX */}
         {user.idImage ? (
-          <img
-            src={user.idImage}
-            alt="Profile"
-            style={styles.profileImage}
-          />
+          <div
+            style={styles.idBox}
+            onClick={() => setShowImage(true)}
+          >
+            <p style={{ fontSize: "12px", margin: 0 }}>View ID</p>
+          </div>
         ) : (
           <div style={styles.avatar}>
             {user.name?.charAt(0).toUpperCase()}
@@ -88,6 +90,17 @@ export default function Profile() {
         </div>
 
       </div>
+
+      {/* FULL IMAGE MODAL */}
+      {showImage && (
+        <div style={styles.modal} onClick={() => setShowImage(false)}>
+          <img
+            src={user.idImage}
+            alt="ID"
+            style={styles.fullImage}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -126,13 +139,18 @@ const styles = {
     margin: "0 auto 15px auto",
   },
 
-  profileImage: {
+  idBox: {
     width: "80px",
     height: "80px",
-    borderRadius: "50%",
-    objectFit: "cover",
+    borderRadius: "10px",
+    background: "#111827",
+    color: "white",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
     margin: "0 auto 15px auto",
-    display: "block",
+    fontSize: "12px",
   },
 
   title: {
@@ -167,5 +185,24 @@ const styles = {
     alignItems: "center",
     fontSize: "18px",
     color: "#6b7280",
+  },
+
+  modal: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    background: "rgba(0,0,0,0.7)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+  },
+
+  fullImage: {
+    maxWidth: "90%",
+    maxHeight: "90%",
+    borderRadius: "10px",
   },
 };

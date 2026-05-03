@@ -6,11 +6,11 @@ const userSchema = new mongoose.Schema(
     email: { type: String, unique: true },
     password: String,
 
-    // 🔥 ADD THIS
+    // Cloudinary image URL
     idImage: {
-      type: String, // will store Cloudinary URL
+      type: String,
       default: "",
-      required: true, // if you want to force ID upload
+      required: false, // 🔥 FIXED
     },
   },
   { timestamps: true }
