@@ -61,11 +61,11 @@ function AdminProducts() {
   const uploadToCloudinary = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("upload_preset", "YOUR_UNSIGNED_PRESET");
+    formData.append("upload_preset", "unsigned_products");
 
     const res = await fetch(
       "https://api.cloudinary.com/v1_1/dvgkqzin1/image/upload",
-      {
+      { 
         method: "POST",
         body: formData,
       }
