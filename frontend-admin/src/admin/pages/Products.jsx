@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import backendUrl from "../../config"; // adjust path if needed
 
 function AdminProducts() {
@@ -11,12 +12,13 @@ function AdminProducts() {
     category: "",
     stock: ""
   });
-
+  const navigate = useNavigate();
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState("");
   const [restockValues, setRestockValues] = useState({});
   const [selectedImage, setSelectedImage] = useState(null);
   const [toast, setToast] = useState("");
+  const [imageUpdateFile, setImageUpdateFile] = useState({});
 
   // FETCH PRODUCTS
   const fetchProducts = async () => {
@@ -128,32 +130,39 @@ function AdminProducts() {
   };
 
   const archiveProduct = async (id) => {
-  const confirmDelete = window.confirm(
-    "Are you sure you want to archive this product?"
-  );
+    const confirmArchive = window.confirm(
+      "Are you sure you want to archive this product?"
+    );
 
-  if (!confirmDelete) return;
+    if (!confirmArchive) return;
 
-  try {
-    const res = await fetch(`${backendUrl}/api/products/${id}/archive`, {
+    try {
+      const res = await fetch(`${backendUrl}/api/products/${id}/archive`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (res.ok) {
+        setToast("Product archived 🗑️");
+        setTimeout(() => setToast(""), 2000);
+
+        // ✅ reload from backend (IMPORTANT)
+        fetchProducts();
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const restoreProduct = async (id) => {
+    await fetch(`${backendUrl}/api/products/${id}/restore`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ isArchived: true }),
     });
 
-    if (res.ok) {
-      setToast("Product archived 🗑️");
-      setTimeout(() => setToast(""), 2000);
-
-      // remove instantly from UI
-      setProducts((prev) => prev.filter((p) => p._id !== id));
-    }
-  } catch (err) {
-    console.log(err);
-  }
-};
+    fetchProducts(); // refresh list
+  };
 
   const handleRestock = async (id) => {
     const amount = restockValues[id];
@@ -191,6 +200,22 @@ function AdminProducts() {
         <h1 style={styles.title}>
           Admin Product Management
         </h1>
+
+        <button
+          style={{
+            marginBottom: "15px",
+            padding: "10px 15px",
+            background: "#6b7280",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
+          onClick={() => navigate("/admin/archived")}
+        >
+          📦 View Archived Products
+        </button>
 
         {/* FORM */}
         <form onSubmit={handleSubmit} style={styles.form}>
