@@ -190,6 +190,15 @@ function AdminProducts() {
     }
   };
 
+  const handleImageChange = (e) => {
+  const file = e.target.files[0];
+  setImageFile(file);
+
+  if (file) {
+    setPreview(URL.createObjectURL(file));
+  }
+};
+
   const restoreProduct = async (id) => {
     await fetch(`${backendUrl}/api/products/${id}/restore`, {
       method: "PUT",
