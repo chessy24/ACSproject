@@ -3,13 +3,22 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import multer from "multer";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import cloudinary from "../utils/cloudinary.js";
 
 const router = express.Router();
 
 /* =========================
-   MULTER SETUP
+   CLOUDINARY MULTER SETUP
 ========================= */
-const storage = multer.memoryStorage();
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "user_ids",
+    allowed_formats: ["jpg", "png", "jpeg"],
+  },
+});
+
 const upload = multer({ storage });
 
 /* =========================
@@ -35,6 +44,7 @@ router.post("/register", upload.single("idImage"), async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
+    // ❗ FORCE ID UPLOAD
     if (!req.file) {
       return res.status(400).json({
         message: "ID image is required",
@@ -47,11 +57,19 @@ router.post("/register", upload.single("idImage"), async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      idImage: req.file.path, // 🔥 CLOUDINARY URL
+      idImage: req.file.path, // ✅ CLOUDINARY URL
     });
+
+    // 🔥 CREATE TOKEN (FIX FOR YOUR LOGIN ISSUE)
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      "secret123",
+      { expiresIn: "1d" }
+    );
 
     return res.status(201).json({
       message: "User created successfully",
+      token, // ✅ FIXED (auto login after register)
       user: {
         id: user._id,
         name: user.name,
