@@ -6,7 +6,7 @@ function Products() {
   const [products, setProducts] = useState([]);
   const [added, setAdded] = useState({});
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [search, setSearch] = useState(""); // ✅ NEW
+  const [search, setSearch] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
 
   // FETCH PRODUCTS
@@ -81,7 +81,7 @@ function Products() {
     }, 1200);
   };
 
-  // ✅ FILTER LOGIC (CATEGORY + SEARCH)
+  // FILTER LOGIC
   const filteredProducts = products.filter((p) => {
     const matchCategory =
       selectedCategory === "All" || p.category === selectedCategory;
@@ -101,7 +101,7 @@ function Products() {
     >
       <h1 style={styles.title}>Products</h1>
 
-      {/* 🔍 SEARCH BOX */}
+      {/* SEARCH */}
       <input
         type="text"
         placeholder="Search products..."
@@ -110,7 +110,7 @@ function Products() {
         style={styles.searchInput}
       />
 
-      {/* CATEGORY FILTER */}
+      {/* CATEGORY */}
       <div style={styles.filterBox}>
         {["All", "Battery", "LED", "IC", "Resistor", "Breadboard", "Wires", "Voltage Regulator", "Diode", "Transistor"].map((cat) => (
           <button
@@ -132,9 +132,23 @@ function Products() {
         {filteredProducts.map((p) => {
           const currentQty = getCartQuantity(p._id);
           const isMaxed = currentQty >= p.stock;
+          const isOutOfStock = p.stock === 0;
 
           return (
-            <div key={p._id} style={styles.card}>
+            <div
+              key={p._id}
+              style={{
+                ...styles.card,
+                opacity: isOutOfStock ? 0.5 : 1,
+                filter: isOutOfStock ? "grayscale(80%) blur(1px)" : "none",
+                position: "relative"
+              }}
+            >
+              {/* OUT OF STOCK BADGE */}
+              {isOutOfStock && (
+                <div style={styles.overlay}>OUT OF STOCK</div>
+              )}
+
               <img
                 src={p.image}
                 alt={p.name}
@@ -151,19 +165,19 @@ function Products() {
               <p style={styles.stock}>Stock: {p.stock}</p>
 
               <button
-                disabled={p.stock === 0 || isMaxed}
+                disabled={isOutOfStock || isMaxed}
                 onClick={() => addToCart(p)}
                 style={{
                   ...styles.button,
-                  background: p.stock === 0 || isMaxed
+                  background: isOutOfStock || isMaxed
                     ? "#9ca3af"
                     : added[p._id]
                       ? "#2563eb"
                       : "#22c55e",
-                  cursor: p.stock === 0 || isMaxed ? "not-allowed" : "pointer"
+                  cursor: isOutOfStock || isMaxed ? "not-allowed" : "pointer"
                 }}
               >
-                {p.stock === 0
+                {isOutOfStock
                   ? "Out of Stock"
                   : isMaxed
                     ? "Max Reached"
@@ -175,15 +189,12 @@ function Products() {
           );
         })}
       </div>
+
+      {/* IMAGE MODAL */}
       {selectedImage && (
         <div style={styles.modalOverlay} onClick={() => setSelectedImage(null)}>
           <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <img
-              src={selectedImage}
-              alt="Product"
-              style={styles.modalImg}
-            />
-
+            <img src={selectedImage} alt="Product" style={styles.modalImg} />
             <button
               style={styles.closeBtn}
               onClick={() => setSelectedImage(null)}
@@ -235,7 +246,21 @@ const styles = {
     padding: "15px",
     borderRadius: "12px",
     boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-    textAlign: "center"
+    textAlign: "center",
+    transition: "0.3s"
+  },
+
+  overlay: {
+    position: "absolute",
+    top: "10px",
+    left: "10px",
+    background: "#ef4444",
+    color: "#fff",
+    padding: "5px 10px",
+    fontSize: "12px",
+    fontWeight: "bold",
+    borderRadius: "6px",
+    zIndex: 2
   },
 
   image: {
@@ -265,7 +290,7 @@ const styles = {
     fontSize: "12px",
     color: "#4b5563",
     marginTop: "5px",
-    lineHeight: "1.4",
+    lineHeight: "1.4"
   },
 
   stock: {
@@ -297,6 +322,7 @@ const styles = {
     cursor: "pointer",
     fontWeight: "bold"
   },
+
   modalOverlay: {
     position: "fixed",
     top: 0,
@@ -307,7 +333,7 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 999,
+    zIndex: 999
   },
 
   modal: {
@@ -316,14 +342,14 @@ const styles = {
     borderRadius: "10px",
     maxWidth: "500px",
     width: "90%",
-    textAlign: "center",
+    textAlign: "center"
   },
 
   modalImg: {
     width: "100%",
     borderRadius: "8px",
     maxHeight: "400px",
-    objectFit: "contain",
+    objectFit: "contain"
   },
 
   closeBtn: {
@@ -333,6 +359,6 @@ const styles = {
     borderRadius: "6px",
     background: "#ef4444",
     color: "#fff",
-    cursor: "pointer",
-  },
+    cursor: "pointer"
+  }
 };
