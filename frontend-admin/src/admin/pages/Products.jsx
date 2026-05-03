@@ -127,6 +127,34 @@ function AdminProducts() {
     fetchProducts();
   };
 
+  const archiveProduct = async (id) => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to archive this product?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    const res = await fetch(`${backendUrl}/api/products/${id}/archive`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ isArchived: true }),
+    });
+
+    if (res.ok) {
+      setToast("Product archived 🗑️");
+      setTimeout(() => setToast(""), 2000);
+
+      // remove instantly from UI
+      setProducts((prev) => prev.filter((p) => p._id !== id));
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
   const handleRestock = async (id) => {
     const amount = restockValues[id];
 
