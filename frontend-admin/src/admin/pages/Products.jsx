@@ -58,13 +58,21 @@ function AdminProducts() {
   };
 
   // IMAGE SELECT
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setImageFile(file);
+  const uploadToCloudinary = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "YOUR_UNSIGNED_PRESET");
 
-    if (file) {
-      setPreview(URL.createObjectURL(file));
-    }
+    const res = await fetch(
+      "https://api.cloudinary.com/v1_1/dvgkqzin1/image/upload",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const data = await res.json();
+    return data.secure_url;
   };
 
   const handleUpdatePrice = async (id) => {
@@ -129,32 +137,32 @@ function AdminProducts() {
     fetchProducts();
   };
 
- const updateProductImage = async (id) => {
-  const file = imageUpdateFile[id];
+  const updateProductImage = async (id) => {
+    const file = imageUpdateFile[id];
 
-  if (!file) {
-    alert("Please select an image first");
-    return;
-  }
+    if (!file) return alert("Select image first");
 
-  const formData = new FormData();
-  formData.append("image", file);
+    try {
+      const imageUrl = await uploadToCloudinary(file);
 
-  try {
-    const res = await fetch(`${backendUrl}/api/products/${id}`, {
-      method: "PUT",
-      body: formData, // IMPORTANT
-    });
+      const res = await fetch(`${backendUrl}/api/products/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          image: imageUrl,
+        }),
+      });
 
-    if (!res.ok) throw new Error("Upload failed");
+      if (!res.ok) throw new Error("Update failed");
 
-    fetchProducts(); // refresh list
-    alert("Image updated!");
-  } catch (err) {
-    console.log(err);
-  }
-};
-
+      fetchProducts();
+      alert("Image updated!");
+    } catch (err) {
+      console.log(err);
+    }
+  };
   const archiveProduct = async (id) => {
     const confirmArchive = window.confirm(
       "Are you sure you want to archive this product?"
