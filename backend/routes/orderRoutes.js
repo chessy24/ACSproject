@@ -40,7 +40,7 @@ router.get("/user-with-payments/:userId", getUserOrdersWithPayments);
 router.get("/:userId", async (req, res) => {
   try {
     const orders = await Order.find({ userId: req.params.userId })
-      .populate("userId", "name email");
+      .populate("userId", "name email idImage");
 
     res.json(orders);
   } catch (err) {
@@ -56,7 +56,7 @@ router.get("/", async (req, res) => {
   try {
     const orders = await Order.find()
       .sort({ createdAt: -1 })
-      .populate("userId", "name email");
+      .populate("userId", "name email idImage");
 
     const ordersWithPayments = await Promise.all(
       orders.map(async (order) => {

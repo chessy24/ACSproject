@@ -3,6 +3,7 @@ import backendUrl from "../../config";
 
 function Orders() {
   const [orders, setOrders] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null); // 🔥 modal state
 
   useEffect(() => {
     fetchOrders();
@@ -32,7 +33,6 @@ function Orders() {
 
       const data = await res.json();
 
-      // ❌ BACKEND ERROR (payment not approved)
       if (!res.ok) {
         alert(data.message);
         return;
@@ -68,6 +68,20 @@ function Orders() {
               <p>User: {order.userId?.name || "Unknown"}</p>
               <p>Email: {order.userId?.email || "—"}</p>
 
+              {/* 🔥 VIEW ID BUTTON */}
+              {order.userId?.idImage ? (
+                <div
+                  style={styles.idBox}
+                  onClick={() => setSelectedImage(order.userId.idImage)}
+                >
+                  View ID
+                </div>
+              ) : (
+                <p style={{ fontSize: "12px", color: "gray" }}>
+                  No ID uploaded
+                </p>
+              )}
+
               <p>Order #{order._id.slice(-6)}</p>
               <p>Total: ₱{order.total}</p>
 
@@ -79,7 +93,6 @@ function Orders() {
             <div style={styles.badges}>
               <span style={styles.badge}>{order.status}</span>
 
-              {/* ✅ PAYMENT BADGE */}
               <span
                 style={{
                   ...styles.badge,
@@ -162,6 +175,16 @@ function Orders() {
 
         </div>
       ))}
+
+      {/* 🔥 IMAGE MODAL */}
+      {selectedImage && (
+        <div
+          style={styles.modal}
+          onClick={() => setSelectedImage(null)}
+        >
+          <img src={selectedImage} style={styles.fullImage} />
+        </div>
+      )}
     </div>
   );
 }
@@ -242,5 +265,40 @@ const styles = {
     width: "40px",
     height: "40px",
     borderRadius: "6px",
+  },
+
+  /* 🔥 SMALL CLICKABLE ID BOX */
+  idBox: {
+    width: "80px",
+    height: "40px",
+    borderRadius: "8px",
+    background: "#021150",
+    color: "white",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    marginTop: "5px",
+    fontSize: "12px",
+  },
+
+  /* 🔥 MODAL */
+  modal: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    background: "rgba(0,0,0,0.7)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+  },
+
+  fullImage: {
+    maxWidth: "90%",
+    maxHeight: "90%",
+    borderRadius: "10px",
   },
 };
