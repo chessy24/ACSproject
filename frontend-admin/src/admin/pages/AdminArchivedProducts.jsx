@@ -25,7 +25,7 @@ function AdminArchivedProducts() {
 
     return (
         <div>
-            <h1 style="color: black;">Archived Products</h1>
+            <h1 style={{ color: "black" }}>Archived Products</h1>
             {products.map((p) => (
                 <div key={p._id}>
                     <img src={p.image} width="80" />
