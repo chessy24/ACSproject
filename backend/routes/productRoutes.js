@@ -138,28 +138,34 @@ router.put("/:id", upload.single("image"), async (req, res) => {
       category: req.body.category,
     };
 
-    if (req.file) {
-      const stream = cloudinary.uploader.upload_stream(
-        { folder: "products" },
-        async (error, result) => {
-          if (error) {
-            return res.status(500).json({ error: "Cloudinary failed" });
-          }
-
-          updateData.image = result.secure_url;
-
-          const updated = await Product.findByIdAndUpdate(
-            req.params.id,
-            updateData,
-            { new: true }
-          );
-
-          return res.json(updated);
-        }
+    // if no image → normal update
+    if (!req.file) {
+      const updated = await Product.findByIdAndUpdate(
+        req.params.id,
+        updateData,
+        { new: true }
       );
-
-      return streamifier.createReadStream(req.file.buffer).pipe(stream);
+      return res.json(updated);
     }
+
+    // if image exists → upload first
+    const streamUpload = (fileBuffer) => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "products" },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
+
+        streamifier.createReadStream(fileBuffer).pipe(stream);
+      });
+    };
+
+    const result = await streamUpload(req.file.buffer);
+
+    updateData.image = result.secure_url;
 
     const updated = await Product.findByIdAndUpdate(
       req.params.id,
@@ -167,11 +173,13 @@ router.put("/:id", upload.single("image"), async (req, res) => {
       { new: true }
     );
 
-    res.json(updated);
+    return res.json(updated);
 
   } catch (err) {
-    res.status(500).json({ message: "Update failed" });
+    console.log("UPDATE IMAGE ERROR:", err);
+    res.status(500).json({ message: "Update failed", error: err.message });
   }
 });
+
 
 export default router;
