@@ -7,11 +7,11 @@ import streamifier from "streamifier";
 const router = express.Router();
 
 /* =========================
-   GET ALL PRODUCTS
+   GET ALL PRODUCTS (NOT ARCHIVED)
 ========================= */
 router.get("/", async (req, res) => {
   try {
-    const products = await Product.find();
+    const products = await Product.find({ isArchived: false });
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch products" });
@@ -19,65 +19,77 @@ router.get("/", async (req, res) => {
 });
 
 /* =========================
-   ADD PRODUCT (FIXED + SAFE)
+   ADD PRODUCT
 ========================= */
 router.post("/", upload.single("image"), async (req, res) => {
   try {
-    console.log("FILE:", req.file);
-    console.log("BODY:", req.body);
-
     if (!req.file) {
       return res.status(400).json({ error: "No image received" });
     }
 
-    const uploadResult = await cloudinary.uploader.upload_stream(
+    const stream = cloudinary.uploader.upload_stream(
       { folder: "products" },
       async (error, result) => {
         if (error) {
-          console.log("CLOUDINARY ERROR:", error);
           return res.status(500).json({ error: "Cloudinary failed" });
         }
 
-        console.log("CLOUDINARY RESULT:", result);
-
-        // 🔥 IMPORTANT: WAIT FOR DB SAVE INSIDE CALLBACK
         const product = await Product.create({
           name: req.body.name,
-          price: req.body.price,
-          description: req.body.description || "", // 🔥 FIX SAFE
+          price: Number(req.body.price),
+          description: req.body.description || "",
           category: req.body.category,
-
-         // 🔥 ADD THIS
-  stock: Number(req.body.stock || 0),
-
-
-          image: result.secure_url
+          stock: Number(req.body.stock || 0),
+          image: result.secure_url,
         });
 
-        return res.json(product);
+        res.json(product);
       }
     );
 
-    // PIPE FILE
-    streamifier.createReadStream(req.file.buffer).pipe(uploadResult);
+    streamifier.createReadStream(req.file.buffer).pipe(stream);
 
   } catch (err) {
-    console.error("UPLOAD ERROR:", err);
     res.status(500).json({ error: "Upload failed" });
   }
 });
 
-router.delete("/:id", async (req, res) => {
+/* =========================
+   ARCHIVE PRODUCT (REPLACES DELETE)
+========================= */
+router.put("/:id/archive", async (req, res) => {
   try {
-    await Product.findByIdAndDelete(req.params.id);
-    res.json({ message: "Product deleted" });
+    const updated = await Product.findByIdAndUpdate(
+      req.params.id,
+      { isArchived: true },
+      { new: true }
+    );
+
+    res.json(updated);
   } catch (err) {
-    res.status(500).json({ message: "Delete failed" });
+    res.status(500).json({ message: "Archive failed" });
   }
 });
 
 /* =========================
-   UPDATE PRODUCT (RESTOCK / EDIT)
+   RESTORE PRODUCT (OPTIONAL)
+========================= */
+router.put("/:id/restore", async (req, res) => {
+  try {
+    const updated = await Product.findByIdAndUpdate(
+      req.params.id,
+      { isArchived: false },
+      { new: true }
+    );
+
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: "Restore failed" });
+  }
+});
+
+/* =========================
+   RESTOCK
 ========================= */
 router.put("/:id/restock", async (req, res) => {
   try {
@@ -98,26 +110,53 @@ router.put("/:id/restock", async (req, res) => {
 });
 
 /* =========================
-   UPDATE PRODUCT (EDIT DETAILS)
+   UPDATE PRODUCT DETAILS + IMAGE
 ========================= */
-router.put("/:id", async (req, res) => {
+router.put("/:id", upload.single("image"), async (req, res) => {
   try {
-    const { name, price, description, category } = req.body;
+    let updateData = {
+      name: req.body.name,
+      price: Number(req.body.price),
+      description: req.body.description,
+      category: req.body.category,
+    };
 
+    // ✅ IF NEW IMAGE PROVIDED → UPLOAD
+    if (req.file) {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: "products" },
+        async (error, result) => {
+          if (error) {
+            return res.status(500).json({ error: "Cloudinary failed" });
+          }
+
+          updateData.image = result.secure_url;
+
+          const updated = await Product.findByIdAndUpdate(
+            req.params.id,
+            updateData,
+            { new: true }
+          );
+
+          return res.json(updated);
+        }
+      );
+
+      return streamifier
+        .createReadStream(req.file.buffer)
+        .pipe(stream);
+    }
+
+    // ✅ NO IMAGE UPDATE
     const updated = await Product.findByIdAndUpdate(
       req.params.id,
-      {
-        name,
-        price,
-        description,
-        category,
-      },
+      updateData,
       { new: true }
     );
 
     res.json(updated);
+
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Update failed" });
   }
 });

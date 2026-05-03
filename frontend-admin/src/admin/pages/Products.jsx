@@ -337,9 +337,24 @@ function AdminProducts() {
 
                 <button
                   style={styles.deleteBtn}
-                  onClick={() => deleteProduct(p._id)}
+                  type="button"
+                  onClick={() => archiveProduct(p._id)}
                 >
-                  Delete 🗑️
+                  Archive 🗑️
+                </button>
+
+                <input
+                  type="file"
+                  onChange={(e) =>
+                    setImageUpdateFile({
+                      ...imageUpdateFile,
+                      [p._id]: e.target.files[0],
+                    })
+                  }
+                />
+
+                <button onClick={() => updateProductImage(p._id)}>
+                  Update Image 🖼️
                 </button>
               </div>
             </div>

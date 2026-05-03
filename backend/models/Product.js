@@ -5,12 +5,19 @@ const productSchema = new mongoose.Schema({
   price: Number,
   description: String,
   category: String,
-  image: String,  
+  image: String,
+
   stock: {
-  type: Number,
-  default: 0
-}
-  
+    type: Number,
+    default: 0
+  },
+
+  // 🔥 ADD THIS (VERY IMPORTANT)
+  archived: {
+    type: Boolean,
+    default: false
+  }
+
 }, { timestamps: true });
 
 export default mongoose.model("Product", productSchema);
