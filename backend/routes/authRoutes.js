@@ -2,15 +2,27 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import multer from "multer";
 
 const router = express.Router();
 
 /* =========================
-   REGISTER
+   MULTER SETUP
 ========================= */
-router.post("/register", async (req, res) => {
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+/* =========================
+   REGISTER (WITH ID IMAGE SUPPORT)
+========================= */
+router.post("/register", upload.single("idImage"), async (req, res) => {
   try {
     const { name, email, password } = req.body;
+
+    // 🔥 SAFE CHECK (prevents crash)
+    if (!email || !password) {
+      return res.status(400).json({ message: "Missing fields" });
+    }
 
     // 🔥 ONLY RTU EMAILS ALLOWED
     if (!email.endsWith("@rtu.edu.ph")) {
@@ -26,16 +38,32 @@ router.post("/register", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // 🔥 HANDLE IMAGE (optional frontend upload)
+    let idImage = "";
+
+    if (req.file) {
+      // If you use Cloudinary later, upload here
+      idImage = "uploaded"; // placeholder (safe for now)
+    }
+
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
+      idImage, // 🔥 SAVE IMAGE FLAG
     });
 
-    res.json({ message: "User created", user });
+    res.json({
+      message: "User created successfully",
+      user,
+    });
 
   } catch (err) {
-    res.status(500).json({ message: "Register error", err });
+    console.log("REGISTER ERROR:", err);
+    res.status(500).json({
+      message: "Register error",
+      error: err.message,
+    });
   }
 });
 
@@ -69,15 +97,21 @@ router.post("/login", async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        idImage: user.idImage, // 🔥 IMPORTANT for cart restriction
       },
     });
+
   } catch (err) {
-    res.status(500).json({ message: "Login error", err });
+    console.log("LOGIN ERROR:", err);
+    res.status(500).json({
+      message: "Login error",
+      error: err.message,
+    });
   }
 });
 
 /* =========================
-   GET CURRENT USER (PROFILE)
+   GET CURRENT USER
 ========================= */
 router.get("/me", async (req, res) => {
   try {
@@ -98,9 +132,9 @@ router.get("/me", async (req, res) => {
     res.json(user);
 
   } catch (err) {
+    console.log("ME ERROR:", err);
     res.status(401).json({ message: "Invalid token" });
   }
 });
-
 
 export default router;
