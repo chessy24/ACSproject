@@ -8,7 +8,29 @@ const router = express.Router();
 ===================== */
 router.post("/", async (req, res) => {
   try {
-    const { name, email, message } = req.body;
+    let { name, email, message } = req.body;
+
+    // ✅ Trim inputs (important)
+    name = name?.trim();
+    email = email?.trim();
+    message = message?.trim();
+
+    // ✅ Validation
+    if (!name || !email || !message) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+    // ✅ Optional: email format check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email format",
+      });
+    }
 
     const newMessage = await Contact.create({
       name,
@@ -16,8 +38,14 @@ router.post("/", async (req, res) => {
       message,
     });
 
-    res.json({ message: "Message sent", data: newMessage });
+    res.json({
+      success: true,
+      message: "Message sent",
+      data: newMessage,
+    });
+
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Error sending message" });
   }
 });
