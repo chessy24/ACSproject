@@ -22,7 +22,8 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   "https://admin.acsonline.shop",
-  "https://acsproject-lfwx.onrender.com"
+  "https://acsproject-lfwx.onrender.com",
+  "https://www.acsonline.shop" // ✅ ADD THIS
 ];
 
 app.use(
