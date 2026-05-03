@@ -22,7 +22,20 @@ function AdminArchivedProducts() {
         // remove from UI after restore
         setProducts((prev) => prev.filter((p) => p._id !== id));
     };
+    const deleteProduct = async (id) => {
+        const confirmDelete = window.confirm(
+            "This will permanently delete the product. Continue?"
+        );
 
+        if (!confirmDelete) return;
+
+        await fetch(`${backendUrl}/api/products/${id}`, {
+            method: "DELETE",
+        });
+
+        // remove from UI
+        setProducts((prev) => prev.filter((p) => p._id !== id));
+    };
     return (
         <div>
             <h1 style={{ color: "black" }}>Archived Products</h1>
