@@ -22,6 +22,8 @@ function AdminProducts() {
   const fetchProducts = async () => {
     const res = await fetch(`${backendUrl}/api/products`);
     const data = await res.json();
+
+    console.log("PRODUCTS API RESPONSE:", data); // 👈 DEBUG
     setProducts(data);
   };
 
