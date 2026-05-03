@@ -10,7 +10,7 @@ import Concerns from "./admin/pages/Concerns";
 import Payments from "./admin/pages/AdminPayments";
 import AdminLogin from "./admin/pages/AdminLogin";
 import SalesReport from "./admin/pages/SalesReport";
-import AdminArchivedProducts from "./pages/admin/AdminArchivedProducts";
+import AdminArchivedProducts from "./admin/pages/AdminArchivedProducts";
 
 function App() {
   const [isAdmin, setIsAdmin] = useState(() => {
