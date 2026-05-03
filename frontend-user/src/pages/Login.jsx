@@ -17,24 +17,28 @@ export default function Login() {
 
   const navigate = useNavigate();
 
-  // INPUT CHANGE
+  /* =========================
+     INPUT CHANGE
+  ========================= */
   const handleChange = (e) => {
     const { name, value, files } = e.target;
 
     if (name === "idImage") {
       setForm({ ...form, idImage: files[0] });
-      setIdWarning(false); // remove warning when file is uploaded
+      setIdWarning(false);
     } else {
       setForm({ ...form, [name]: value });
     }
   };
 
-  // SUBMIT LOGIN / REGISTER
+  /* =========================
+     SUBMIT LOGIN / REGISTER
+  ========================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!isLogin && !form.email.endsWith("@rtu.edu.ph")) {
-      return alert("Only @rtu.edu.ph emails are allowed to register");
+      return alert("Only @rtu.edu.ph emails are allowed");
     }
 
     const url = isLogin
@@ -44,29 +48,35 @@ export default function Login() {
     try {
       let options;
 
+      /* =========================
+         LOGIN
+      ========================= */
       if (isLogin) {
-        // LOGIN
         options = {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            email: form.email,
+            email: form.email.trim(),
             password: form.password,
           }),
         };
-      } else {
-        // SIGNUP (FORMDATA)
+      }
+
+      /* =========================
+         REGISTER
+      ========================= */
+      else {
         const formData = new FormData();
-        formData.append("name", form.name);
-        formData.append("email", form.email);
+        formData.append("name", form.name.trim());
+        formData.append("email", form.email.trim());
         formData.append("password", form.password);
 
         if (form.idImage) {
           formData.append("idImage", form.idImage);
         } else {
-          setIdWarning(true); // ⚠️ warning if no ID uploaded
+          setIdWarning(true);
         }
 
         options = {
@@ -78,26 +88,46 @@ export default function Login() {
       const res = await fetch(url, options);
       const data = await res.json();
 
+      console.log("AUTH RESPONSE:", data);
+
+      /* =========================
+         HANDLE ERROR
+      ========================= */
       if (!res.ok) {
-        return alert(data.message || "Error");
+        return alert(data.message || "Authentication failed");
       }
 
+      /* =========================
+         SAVE TOKEN (IMPORTANT FIX)
+      ========================= */
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
 
+      /* =========================
+         SAVE USER
+      ========================= */
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
 
+      /* =========================
+         CONFIRM STORAGE
+      ========================= */
+      console.log("TOKEN STORED:", localStorage.getItem("token"));
+
       alert(data.message || "Success");
+
       navigate("/");
     } catch (err) {
-      console.log(err);
+      console.log("LOGIN ERROR:", err);
       alert("Server error");
     }
   };
 
+  /* =========================
+     UI
+  ========================= */
   return (
     <div style={styles.container}>
       <div style={styles.card}>
@@ -130,31 +160,24 @@ export default function Login() {
         {/* FORM */}
         <form onSubmit={handleSubmit} style={styles.form}>
 
-          {/* NAME */}
           {!isLogin && (
-            <div style={styles.inputWrapper}>
-              <input
-                name="name"
-                placeholder="Full Name"
-                value={form.name}
-                onChange={handleChange}
-                style={styles.input}
-              />
-            </div>
-          )}
-
-          {/* EMAIL */}
-          <div style={styles.inputWrapper}>
             <input
-              name="email"
-              placeholder="Email"
-              value={form.email}
+              name="name"
+              placeholder="Full Name"
+              value={form.name}
               onChange={handleChange}
               style={styles.input}
             />
-          </div>
+          )}
 
-          {/* PASSWORD */}
+          <input
+            name="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={handleChange}
+            style={styles.input}
+          />
+
           <div style={styles.inputWrapper}>
             <input
               name="password"
@@ -173,9 +196,8 @@ export default function Login() {
             </span>
           </div>
 
-          {/* ID UPLOAD */}
           {!isLogin && (
-            <div style={styles.inputWrapper}>
+            <>
               <input
                 type="file"
                 name="idImage"
@@ -185,13 +207,12 @@ export default function Login() {
 
               {idWarning && (
                 <p style={styles.warning}>
-                  ⚠️ No ID uploaded. Orders may be ignored.
+                  ⚠️ Please upload ID (required for checkout)
                 </p>
               )}
-            </div>
+            </>
           )}
 
-          {/* SUBMIT */}
           <button style={styles.button}>
             {isLogin ? "Login" : "Create Account"}
           </button>
@@ -212,7 +233,9 @@ export default function Login() {
   );
 }
 
-/* STYLES */
+/* =========================
+   STYLES
+========================= */
 const styles = {
   container: {
     height: "100vh",
@@ -251,10 +274,12 @@ const styles = {
   input: {
     width: "100%",
     padding: "10px",
-    paddingRight: "40px",
     borderRadius: "6px",
     border: "1px solid #ccc",
-    boxSizing: "border-box",
+  },
+
+  inputWrapper: {
+    position: "relative",
   },
 
   eye: {
@@ -263,7 +288,6 @@ const styles = {
     top: "50%",
     transform: "translateY(-50%)",
     cursor: "pointer",
-    fontSize: "18px",
   },
 
   button: {
@@ -275,15 +299,9 @@ const styles = {
     cursor: "pointer",
   },
 
-  inputWrapper: {
-    position: "relative",
-    width: "100%",
-  },
-
   warning: {
     fontSize: "12px",
     color: "red",
-    marginTop: "5px",
   },
 
   adminText: {

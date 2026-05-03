@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import backendUrl from "../../config"; // adjust path if needed
+import backendUrl from "../../config";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
@@ -10,16 +10,30 @@ export default function Profile() {
       try {
         const token = localStorage.getItem("token");
 
-         const res = await fetch(`${backendUrl}/api/auth/me`, {
+        if (!token) {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        const res = await fetch(`${backendUrl}/api/auth/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
         const data = await res.json();
+
+        if (!res.ok) {
+          console.log("AUTH ERROR:", data);
+          setUser(null);
+          return;
+        }
+
         setUser(data);
       } catch (err) {
         console.log(err);
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -39,7 +53,7 @@ export default function Profile() {
   if (!user) {
     return (
       <div style={styles.loadingContainer}>
-        <p>Failed to load user</p>
+        <p>You are not logged in or session expired</p>
       </div>
     );
   }
@@ -48,12 +62,19 @@ export default function Profile() {
     <div style={styles.page}>
       <div style={styles.card}>
 
-        {/* AVATAR */}
-        <div style={styles.avatar}>
-          {user.name?.charAt(0).toUpperCase()}
-        </div>
+        {/* PROFILE IMAGE OR AVATAR */}
+        {user.idImage ? (
+          <img
+            src={user.idImage}
+            alt="Profile"
+            style={styles.profileImage}
+          />
+        ) : (
+          <div style={styles.avatar}>
+            {user.name?.charAt(0).toUpperCase()}
+          </div>
+        )}
 
-        {/* INFO */}
         <h1 style={styles.title}>My Profile</h1>
 
         <div style={styles.infoBox}>
@@ -92,17 +113,26 @@ const styles = {
   },
 
   avatar: {
-    width: "70px",
-    height: "70px",
+    width: "80px",
+    height: "80px",
     borderRadius: "50%",
     background: "#021150",
     color: "white",
-    fontSize: "28px",
+    fontSize: "30px",
     fontWeight: "bold",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     margin: "0 auto 15px auto",
+  },
+
+  profileImage: {
+    width: "80px",
+    height: "80px",
+    borderRadius: "50%",
+    objectFit: "cover",
+    margin: "0 auto 15px auto",
+    display: "block",
   },
 
   title: {

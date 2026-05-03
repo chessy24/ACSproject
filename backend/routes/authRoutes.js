@@ -13,18 +13,17 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 /* =========================
-   REGISTER (WITH ID IMAGE SUPPORT)
+   REGISTER
 ========================= */
 router.post("/register", upload.single("idImage"), async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // 🔥 SAFE CHECK (prevents crash)
-    if (!email || !password) {
+    // ✅ SAFE VALIDATION
+    if (!name || !email || !password) {
       return res.status(400).json({ message: "Missing fields" });
     }
 
-    // 🔥 ONLY RTU EMAILS ALLOWED
     if (!email.endsWith("@rtu.edu.ph")) {
       return res.status(400).json({
         message: "Only @rtu.edu.ph emails are allowed",
@@ -32,35 +31,43 @@ router.post("/register", upload.single("idImage"), async (req, res) => {
     }
 
     const existingUser = await User.findOne({ email });
+
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 🔥 HANDLE IMAGE (optional frontend upload)
+    // ✅ ID IMAGE FLAG (safe placeholder)
     let idImage = "";
 
     if (req.file) {
-      // If you use Cloudinary later, upload here
-      idImage = "uploaded"; // placeholder (safe for now)
+      idImage = "uploaded"; // replace later with Cloudinary if needed
     }
 
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
-      idImage, // 🔥 SAVE IMAGE FLAG
+      idImage,
     });
 
-    res.json({
+    // ❗ DO NOT return password
+    const safeUser = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      idImage: user.idImage,
+    };
+
+    return res.status(201).json({
       message: "User created successfully",
-      user,
+      user: safeUser,
     });
 
   } catch (err) {
     console.log("REGISTER ERROR:", err);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Register error",
       error: err.message,
     });
@@ -74,12 +81,18 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ message: "Missing fields" });
+    }
+
     const user = await User.findOne({ email });
+
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+
     if (!isMatch) {
       return res.status(400).json({ message: "Wrong password" });
     }
@@ -90,20 +103,20 @@ router.post("/login", async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    res.json({
+    return res.json({
       message: "Login success",
       token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
-        idImage: user.idImage, // 🔥 IMPORTANT for cart restriction
+        idImage: user.idImage,
       },
     });
 
   } catch (err) {
     console.log("LOGIN ERROR:", err);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Login error",
       error: err.message,
     });
@@ -111,15 +124,17 @@ router.post("/login", async (req, res) => {
 });
 
 /* =========================
-   GET CURRENT USER
+   GET CURRENT USER (/me)
 ========================= */
 router.get("/me", async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
+    const authHeader = req.headers.authorization;
 
-    if (!token) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ message: "No token" });
     }
+
+    const token = authHeader.split(" ")[1];
 
     const decoded = jwt.verify(token, "secret123");
 
@@ -129,11 +144,18 @@ router.get("/me", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.json(user);
+    return res.json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      idImage: user.idImage,
+    });
 
   } catch (err) {
     console.log("ME ERROR:", err);
-    res.status(401).json({ message: "Invalid token" });
+    return res.status(401).json({
+      message: "Invalid or expired token",
+    });
   }
 });
 
