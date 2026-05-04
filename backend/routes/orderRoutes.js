@@ -85,15 +85,13 @@ router.put("/:id/status", async (req, res) => {
   try {
     const { status, compartment } = req.body;
 
-    const order = await Order.findById(req.params.id);
+    let order = await Order.findById(req.params.id);
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    /* =========================
-       PAYMENT CHECK
-    ========================= */
+    /* PAYMENT CHECK */
     if (status === "Delivered") {
       const payment = await Payment.findOne({
         orderId: order._id,
@@ -107,9 +105,7 @@ router.put("/:id/status", async (req, res) => {
       }
     }
 
-    /* =========================
-       STOCK DEDUCTION
-    ========================= */
+    /* STOCK DEDUCTION */
     if (status === "Delivered" && order.status !== "Delivered") {
       for (const item of order.items) {
         await Product.findByIdAndUpdate(item.productId, {
@@ -118,9 +114,7 @@ router.put("/:id/status", async (req, res) => {
       }
     }
 
-    /* =========================
-       COMPARTMENT PASSWORD
-    ========================= */
+    /* PASSWORD */
     if (!order.compartmentPassword && status === "Delivered") {
       order.compartmentPassword = Math.floor(
         1000 + Math.random() * 9000
@@ -135,7 +129,12 @@ router.put("/:id/status", async (req, res) => {
 
     await order.save();
 
-    res.json(order);
+    // 🔥 IMPORTANT FIX HERE
+    const populatedOrder = await Order.findById(order._id)
+      .populate("userId", "name email idImage");
+
+    res.json(populatedOrder);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({

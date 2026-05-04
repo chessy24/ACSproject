@@ -39,7 +39,7 @@ function Orders() {
       }
 
       setOrders((prev) =>
-        prev.map((o) => (o._id === id ? data : o))
+        prev.map((o) => (o._id === id ? { ...o, ...data } : o))
       );
     } catch (err) {
       console.log(err);
