@@ -260,10 +260,21 @@ const styles = {
   },
 
   select: {
-    marginTop: "8px",
-    padding: "8px",
-    width: "200px",
-  },
+  marginTop: "8px",
+  padding: "8px",
+  width: "200px",
+
+  /* 🔥 FIX VISIBILITY */
+  backgroundColor: "#fff",
+  color: "#111827",
+  border: "1px solid #d1d5db",
+  borderRadius: "6px",
+},
+
+option: {
+  color: "#111827",
+  backgroundColor: "#ffffff",
+},
 
   item: {
     display: "flex",
