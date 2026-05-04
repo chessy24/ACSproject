@@ -115,8 +115,17 @@ function Orders() {
           {/* STATUS */}
           <select
             value={order.status}
+            disabled={
+              order.status === "Delivered" ||
+              order.paymentStatus !== "Approved"
+            }
             onChange={(e) => {
               const newStatus = e.target.value;
+
+              if (order.status === "Delivered") {
+                alert("⚠️ This order is already delivered and cannot be changed.");
+                return;
+              }
 
               if (
                 newStatus === "Delivered" &&
@@ -126,9 +135,23 @@ function Orders() {
                 return;
               }
 
+              if (newStatus === "Delivered") {
+                const confirmAction = window.confirm(
+                  "⚠️ This action will deduct stock and cannot be undone. Continue?"
+                );
+
+                if (!confirmAction) return;
+              }
+
               updateOrder(order._id, { status: newStatus });
             }}
-            style={styles.select}
+            style={{
+              ...styles.select,
+              background:
+                order.status === "Delivered" ? "#e5e7eb" : "#fff",
+              cursor:
+                order.status === "Delivered" ? "not-allowed" : "pointer",
+            }}
           >
             {statusOptions.map((s) => (
               <option

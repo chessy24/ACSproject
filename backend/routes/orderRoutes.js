@@ -91,6 +91,13 @@ router.put("/:id/status", async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
+    /* 🔒 BLOCK ANY CHANGES AFTER DELIVERED */
+    if (order.status === "Delivered") {
+      return res.status(400).json({
+        message: "Order already delivered. Cannot update again.",
+      });
+    }
+
     /* PAYMENT CHECK */
     if (status === "Delivered") {
       const payment = await Payment.findOne({
@@ -105,8 +112,8 @@ router.put("/:id/status", async (req, res) => {
       }
     }
 
-    /* STOCK DEDUCTION */
-    if (status === "Delivered" && order.status !== "Delivered") {
+    /* STOCK DEDUCTION (ONLY ONCE) */
+    if (status === "Delivered") {
       for (const item of order.items) {
         await Product.findByIdAndUpdate(item.productId, {
           $inc: { stock: -item.quantity },
@@ -129,11 +136,21 @@ router.put("/:id/status", async (req, res) => {
 
     await order.save();
 
-    // 🔥 IMPORTANT FIX HERE
+    // 🔥 populate + paymentStatus (keep your UI consistent)
     const populatedOrder = await Order.findById(order._id)
       .populate("userId", "name email idImage");
 
-    res.json(populatedOrder);
+    const payment = await Payment.findOne({
+      orderId: order._id,
+      status: "Approved",
+    });
+
+    const finalOrder = {
+      ...populatedOrder.toObject(),
+      paymentStatus: payment ? "Approved" : "Pending",
+    };
+
+    res.json(finalOrder);
 
   } catch (err) {
     console.error(err);
