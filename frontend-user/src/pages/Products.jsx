@@ -31,56 +31,75 @@ function Products() {
     return item ? item.quantity : 0;
   };
 
-  const addToCart = (product) => {
-    const token = localStorage.getItem("token");
+  const addToCart = async (product) => {
+  const token = localStorage.getItem("token");
 
-    if (!token) {
-      alert("Please log in first to add items to cart.");
+  if (!token) {
+    alert("Please log in first to add items to cart.");
+    return;
+  }
+
+  // 🔥 Check session only if token exists
+  try {
+    const res = await fetch(`${backendUrl}/api/auth/me`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      alert("Session expired. Please login again.");
+      localStorage.removeItem("token");
+      return;
+    }
+  } catch (err) {
+    console.log(err);
+    alert("Unable to verify session");
+    return;
+  }
+
+  // 🛒 CART LOGIC
+  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+  const exists = cart.find(item => item.productId === product._id);
+
+  if (exists) {
+    if (exists.quantity >= product.stock) {
+      alert("Stock limit reached!");
       return;
     }
 
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-    const exists = cart.find(item => item.productId === product._id);
-
-    if (exists) {
-      if (exists.quantity >= product.stock) {
-        alert("Stock limit reached!");
-        return;
-      }
-
-      exists.quantity += 1;
-    } else {
-      if (product.stock <= 0) {
-        alert("Out of stock!");
-        return;
-      }
-
-      cart.push({
-        productId: product._id,
-        name: product.name,
-        price: product.price,
-        image: product.image,
-        stock: product.stock,
-        quantity: 1
-      });
+    exists.quantity += 1;
+  } else {
+    if (product.stock <= 0) {
+      alert("Out of stock!");
+      return;
     }
 
-    localStorage.setItem("cart", JSON.stringify(cart));
+    cart.push({
+      productId: product._id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      stock: product.stock,
+      quantity: 1
+    });
+  }
 
+  localStorage.setItem("cart", JSON.stringify(cart));
+
+  setAdded(prev => ({
+    ...prev,
+    [product._id]: true
+  }));
+
+  setTimeout(() => {
     setAdded(prev => ({
       ...prev,
-      [product._id]: true
+      [product._id]: false
     }));
-
-    setTimeout(() => {
-      setAdded(prev => ({
-        ...prev,
-        [product._id]: false
-      }));
-    }, 1200);
-  };
-
+  }, 1200);
+};
   // FILTER LOGIC
   const filteredProducts = products.filter((p) => {
     const matchCategory =

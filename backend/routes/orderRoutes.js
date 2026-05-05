@@ -4,18 +4,19 @@ import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import Payment from "../models/Payment.js";
 import { getUserOrdersWithPayments } from "../controller/orderController.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 /* =========================
-   CREATE ORDER
+   CREATE ORDER (SECURED)
 ========================= */
-router.post("/", async (req, res) => {
+router.post("/", authMiddleware, async (req, res) => {
   try {
-    const { userId, items, total } = req.body;
+    const { items, total } = req.body;
 
     const order = await Order.create({
-      userId,
+      userId: req.user.id, // ✅ SECURE (from token)
       items,
       total,
       status: "Pending",
@@ -35,11 +36,11 @@ router.post("/", async (req, res) => {
 router.get("/user-with-payments/:userId", getUserOrdersWithPayments);
 
 /* =========================
-   GET USER ORDERS
+   GET USER ORDERS (SECURED VERSION)
 ========================= */
-router.get("/:userId", async (req, res) => {
+router.get("/my-orders", authMiddleware, async (req, res) => {
   try {
-    const orders = await Order.find({ userId: req.params.userId })
+    const orders = await Order.find({ userId: req.user.id })
       .populate("userId", "name email idImage");
 
     res.json(orders);
@@ -49,8 +50,7 @@ router.get("/:userId", async (req, res) => {
 });
 
 /* =========================
-   GET ALL ORDERS (ADMIN)
-   + PAYMENT STATUS FIX
+   GET ALL ORDERS (ADMIN / INTERNAL)
 ========================= */
 router.get("/", async (req, res) => {
   try {
@@ -121,7 +121,7 @@ router.put("/:id/status", async (req, res) => {
       }
     }
 
-    /* PASSWORD */
+    /* PASSWORD GENERATION */
     if (!order.compartmentPassword && status === "Delivered") {
       order.compartmentPassword = Math.floor(
         1000 + Math.random() * 9000
@@ -136,7 +136,7 @@ router.put("/:id/status", async (req, res) => {
 
     await order.save();
 
-    // 🔥 populate + paymentStatus (keep your UI consistent)
+    // 🔥 populate + payment status
     const populatedOrder = await Order.findById(order._id)
       .populate("userId", "name email idImage");
 
