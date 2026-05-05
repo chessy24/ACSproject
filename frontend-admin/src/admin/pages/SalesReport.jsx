@@ -17,7 +17,12 @@ export default function SalesReport() {
   const [to, setTo] = useState("");
   const [report, setReport] = useState(null);
 
+  // ✅ VALIDATION
+  const isDisabled = !from || !to || from > to;
+
   const fetchReport = async () => {
+    if (isDisabled) return;
+
     const res = await fetch(
       `${backendUrl}/api/reports/sales?from=${from}&to=${to}`
     );
@@ -66,18 +71,35 @@ export default function SalesReport() {
 
       {/* FILTER BAR */}
       <div style={styles.filterBox}>
-        <input
-          type="date"
-          style={styles.input}
-          onChange={(e) => setFrom(e.target.value)}
-        />
-        <input
-          type="date"
-          style={styles.input}
-          onChange={(e) => setTo(e.target.value)}
-        />
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>From</label>
+          <input
+            type="date"
+            style={styles.input}
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+          />
+        </div>
 
-        <button style={styles.button} onClick={fetchReport}>
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>To</label>
+          <input
+            type="date"
+            style={styles.input}
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+          />
+        </div>
+
+        <button
+          style={{
+            ...styles.button,
+            opacity: isDisabled ? 0.6 : 1,
+            cursor: isDisabled ? "not-allowed" : "pointer",
+          }}
+          onClick={fetchReport}
+          disabled={isDisabled}
+        >
           Generate Report
         </button>
       </div>
@@ -158,7 +180,7 @@ export default function SalesReport() {
 }
 
 /* =========================
-   STYLES (CLEAN DASHBOARD UI)
+   STYLES
 ========================= */
 const styles = {
   page: {
@@ -167,16 +189,22 @@ const styles = {
     minHeight: "100vh",
   },
 
-  title: {
-    fontSize: "26px",
-    fontWeight: "700",
+  filterBox: {
+    display: "flex",
+    gap: "15px",
+    alignItems: "flex-end",
     marginBottom: "20px",
   },
 
-  filterBox: {
+  inputGroup: {
     display: "flex",
-    gap: "10px",
-    marginBottom: "20px",
+    flexDirection: "column",
+  },
+
+  label: {
+    fontSize: "12px",
+    marginBottom: "4px",
+    color: "#333",
   },
 
   input: {
@@ -191,7 +219,6 @@ const styles = {
     border: "none",
     padding: "8px 14px",
     borderRadius: "6px",
-    cursor: "pointer",
   },
 
   pdfBtn: {
