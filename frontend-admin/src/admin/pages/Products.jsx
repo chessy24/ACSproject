@@ -358,6 +358,11 @@ function AdminProducts() {
               />
               <div style={styles.cardBody}>
                 <h3 style={styles.cardTitle}>{p.name}</h3>
+
+                <label style={{ fontSize: "12px", marginTop: "8px" }}>
+                  Price
+                </label>
+
                 <input
                   type="number"
                   value={restockValues[`price-${p._id}`] ?? p.price}
@@ -369,9 +374,11 @@ function AdminProducts() {
                   }
                   style={{
                     width: "100%",
-                    padding: "6px",
+                    padding: "8px",
                     borderRadius: "6px",
-                    marginTop: "5px"
+                    marginTop: "4px",
+                    marginBottom: "8px",
+                    boxSizing: "border-box"
                   }}
                 />
                 <p style={styles.cardCategory}>{p.category}</p>
@@ -380,9 +387,13 @@ function AdminProducts() {
                 </p>
                 <p>Stock: {p.stock}</p>
 
+                <label style={{ fontSize: "12px", marginTop: "6px" }}>
+                  Restock
+                </label>
+
                 <input
                   type="number"
-                  placeholder="Restock amount"
+                  placeholder="Enter amount"
                   value={restockValues[p._id] || ""}
                   onChange={(e) =>
                     setRestockValues({
@@ -391,11 +402,13 @@ function AdminProducts() {
                     })
                   }
                   style={{
-                    marginTop: "8px",
+                    marginTop: "4px",
+                    marginBottom: "10px", // 👈 IMPORTANT (adds space below)
                     width: "100%",
-                    padding: "6px",
+                    padding: "8px",
                     borderRadius: "6px",
-                    border: "none",
+                    border: "1px solid #ccc",
+                    boxSizing: "border-box"
                   }}
                 />
 
@@ -588,8 +601,11 @@ const styles = {
   },
 
   cardBody: {
-    marginTop: "10px"
-  },
+  marginTop: "10px",
+  display: "flex",
+  flexDirection: "column",
+  gap: "6px"
+},
 
   cardTitle: {
     fontSize: "16px",
