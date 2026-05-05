@@ -64,7 +64,7 @@ router.post("/register", upload.single("idImage"), async (req, res) => {
     const token = jwt.sign(
       { id: user._id, email: user.email },
       "secret123",
-      { expiresIn: "5min" }
+      { expiresIn: "1d" }
     );
 
     return res.status(201).json({
@@ -113,7 +113,7 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign(
       { id: user._id, email: user.email },
       "secret123",
-      { expiresIn: "5min" }
+      { expiresIn: "1d" }
     );
 
     return res.json({
