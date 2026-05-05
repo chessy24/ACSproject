@@ -18,7 +18,6 @@ export default function Cart() {
 
     setCart(fixedCart);
 
-    // 🔥 CHECK IF USER HAS ID IMAGE
     setHasID(!!user?.idImage);
   }, []);
 
@@ -60,7 +59,6 @@ export default function Cart() {
 
   // CHECKOUT
   const handleCheckout = async () => {
-    // 🚫 BLOCK IF NO ID
     if (!hasID) {
       alert("⚠️ You must upload a valid ID before checkout.");
       return;
@@ -76,10 +74,19 @@ export default function Cart() {
 
       const userId = user.id || user._id;
 
+      // 🔥 FIX: TOKEN ADDED HERE
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        alert("Session expired. Please login again.");
+        return;
+      }
+
       const res = await fetch(`${backendUrl}/api/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // 🔥 IMPORTANT FIX
         },
         body: JSON.stringify({
           userId,
@@ -98,7 +105,7 @@ export default function Cart() {
 
       if (!res.ok) {
         console.log(data);
-        return alert("Checkout failed");
+        return alert(data.message || "Checkout failed");
       }
 
       alert("Order placed successfully!");
@@ -160,7 +167,6 @@ export default function Cart() {
                 <p style={styles.label}>Total Price</p>
                 <h2 style={styles.totalPrice}>₱{totalPrice}</h2>
 
-                {/* ⚠️ WARNING */}
                 {!hasID && (
                   <p style={styles.warning}>
                     ⚠️ Upload a valid ID during registration to enable checkout
