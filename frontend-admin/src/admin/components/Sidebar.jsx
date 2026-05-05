@@ -1,16 +1,26 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, ShoppingCart, Package, MessageSquare, CreditCard, BarChart3 } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
+import {
+  LayoutDashboard,
+  ShoppingCart,
+  Package,
+  MessageSquare,
+  CreditCard,
+  BarChart3,
+} from "lucide-react";
 import png from "../../assets/about-image.png";
-
 
 const SIDEBAR_WIDTH = 150;
 
 export default function Sidebar({ open, setOpen }) {
-
   const location = useLocation();
 
   const isActive = (path) => location.pathname === path;
+
+  // ✅ HANDLE AUTO CLOSE
+  const handleNavClick = () => {
+    setOpen(false);
+  };
 
   return (
     <div
@@ -19,11 +29,8 @@ export default function Sidebar({ open, setOpen }) {
         transform: open ? "translateX(0)" : "translateX(-100%)",
       }}
     >
-      {/* TOGGLE (NOW INSIDE SIDEBAR = PERFECT ALIGNMENT) */}
-      <div
-        onClick={() => setOpen(!open)}
-        style={styles.toggleTab}
-      >
+      {/* TOGGLE */}
+      <div onClick={() => setOpen(!open)} style={styles.toggleTab}>
         {open ? "❮" : "❯"}
       </div>
 
@@ -35,6 +42,7 @@ export default function Sidebar({ open, setOpen }) {
 
       <Link
         to="/admin"
+        onClick={handleNavClick}
         style={{
           ...styles.item,
           ...(isActive("/admin") ? styles.active : {}),
@@ -46,6 +54,7 @@ export default function Sidebar({ open, setOpen }) {
 
       <Link
         to="/admin/orders"
+        onClick={handleNavClick}
         style={{
           ...styles.item,
           ...(isActive("/admin/orders") ? styles.active : {}),
@@ -57,6 +66,7 @@ export default function Sidebar({ open, setOpen }) {
 
       <Link
         to="/admin/products"
+        onClick={handleNavClick}
         style={{
           ...styles.item,
           ...(isActive("/admin/products") ? styles.active : {}),
@@ -68,6 +78,7 @@ export default function Sidebar({ open, setOpen }) {
 
       <Link
         to="/admin/concerns"
+        onClick={handleNavClick}
         style={{
           ...styles.item,
           ...(isActive("/admin/concerns") ? styles.active : {}),
@@ -79,6 +90,7 @@ export default function Sidebar({ open, setOpen }) {
 
       <Link
         to="/admin/payments"
+        onClick={handleNavClick}
         style={{
           ...styles.item,
           ...(isActive("/admin/payments") ? styles.active : {}),
@@ -90,6 +102,7 @@ export default function Sidebar({ open, setOpen }) {
 
       <Link
         to="/admin/sales-report"
+        onClick={handleNavClick}
         style={{
           ...styles.item,
           ...(isActive("/admin/sales-report") ? styles.active : {}),
@@ -98,7 +111,6 @@ export default function Sidebar({ open, setOpen }) {
         <BarChart3 size={18} />
         Sales Report
       </Link>
-
     </div>
   );
 }
@@ -145,8 +157,8 @@ const styles = {
   },
 
   toggleTab: {
-    position: "absolute",   // 👈 KEY FIX
-    right: "-18px",        // 👈 ALWAYS STICKS TO EDGE
+    position: "absolute",
+    right: "-18px",
     top: "20px",
     width: "18px",
     height: "38px",
@@ -160,6 +172,7 @@ const styles = {
     color: "white",
     zIndex: 1100,
   },
+
   image: {
     width: "70px",
     height: "50px",
