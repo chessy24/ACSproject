@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import backendUrl from "../../config"; // adjust path if needed
+import backendUrl from "../../config";
 
 export default function Orders() {
     const [orders, setOrders] = useState([]);
     const [selectedProof, setSelectedProof] = useState(null);
+    const [activeTab, setActiveTab] = useState("All");
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -32,20 +33,53 @@ export default function Orders() {
         fetchOrders();
     }, []);
 
+    /* =========================
+       FILTER + COUNTS
+    ========================= */
+    const filteredOrders = orders.filter((order) => {
+        if (activeTab === "All") return true;
+        return order.status === activeTab;
+    });
+
+    const getCount = (status) => {
+        if (status === "All") return orders.length;
+        return orders.filter((o) => o.status === status).length;
+    };
 
     return (
         <div style={styles.page}>
             <h1 style={styles.title}>My Orders</h1>
 
-            {orders.length === 0 ? (
+            {/* 🔥 TABS */}
+            <div style={styles.tabs}>
+                {["All", "Pending", "Shipped", "Delivered", "Cancelled"].map((tab) => (
+                    <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        style={{
+                            ...styles.tabBtn,
+                            borderBottom:
+                                activeTab === tab
+                                    ? "3px solid #06b6d4"
+                                    : "3px solid transparent",
+                            color: activeTab === tab ? "#06b6d4" : "#555",
+                        }}
+                    >
+                        {tab}
+                        <span style={styles.badge}>{getCount(tab)}</span>
+                    </button>
+                ))}
+            </div>
+
+            {/* EMPTY */}
+            {filteredOrders.length === 0 ? (
                 <div style={styles.empty}>
-                    <p>No orders yet 🛒</p>
+                    <p>No orders in this tab 🛒</p>
                 </div>
             ) : (
                 <div style={styles.container}>
-                    {orders.map((order) => (
+                    {filteredOrders.map((order) => (
                         <div key={order._id} style={styles.card}>
-
                             {/* HEADER */}
                             <div style={styles.header}>
                                 <div>
@@ -65,14 +99,15 @@ export default function Orders() {
                                                 order.status === "Pending"
                                                     ? "#fbbf24"
                                                     : order.status === "Delivered"
-                                                        ? "#22c55e"
-                                                        : "#60a5fa",
+                                                    ? "#22c55e"
+                                                    : order.status === "Cancelled"
+                                                    ? "#ef4444"
+                                                    : "#60a5fa",
                                         }}
                                     >
                                         {order.status}
                                     </span>
 
-                                    {/* COMPARTMENT DISPLAY */}
                                     <span style={styles.compartment}>
                                         Compartment #{order.compartment || "TBA"}
                                     </span>
@@ -89,7 +124,13 @@ export default function Orders() {
                             <div style={styles.items}>
                                 {order.items.map((item, i) => (
                                     <div key={i} style={styles.item}>
-                                        <img src={item.image} style={styles.img} />
+                                        <img
+                                            src={item.image}
+                                            style={styles.img}
+                                            onError={(e) =>
+                                                (e.target.src = "/placeholder.png")
+                                            }
+                                        />
 
                                         <div style={styles.itemInfo}>
                                             <p style={styles.name}>{item.name}</p>
@@ -103,12 +144,14 @@ export default function Orders() {
                             <div style={styles.footer}>
                                 <h3>Total: ₱{order.total}</h3>
 
-                                {/* GCASH BUTTON */}
                                 {order.status === "Pending" &&
-                                    (!order.payment || order.payment.status === "Rejected") && (
+                                    (!order.payment ||
+                                        order.payment.status === "Rejected") && (
                                         <button
                                             onClick={() =>
-                                                navigate(`/gcash-payment/${order._id}`)
+                                                navigate(
+                                                    `/gcash-payment/${order._id}`
+                                                )
                                             }
                                             style={styles.gcashBtn}
                                         >
@@ -119,13 +162,18 @@ export default function Orders() {
                                     )}
                             </div>
 
+                            {/* PAYMENT */}
                             {order.payment && (
                                 <div style={styles.paymentBox}>
-                                    <h4 style={{ margin: "0 0 5px 0" }}>Payment Proof</h4>
+                                    <h4 style={{ margin: "0 0 5px 0" }}>
+                                        Payment Proof
+                                    </h4>
 
                                     <button
                                         style={styles.viewBtn}
-                                        onClick={() => setSelectedProof(order.payment.proof)}
+                                        onClick={() =>
+                                            setSelectedProof(order.payment.proof)
+                                        }
                                     >
                                         View Payment Proof 👁️
                                     </button>
@@ -137,9 +185,10 @@ export default function Orders() {
                                                 color:
                                                     order.payment.status === "Approved"
                                                         ? "green"
-                                                        : order.payment.status === "Rejected"
-                                                            ? "red"
-                                                            : "orange",
+                                                        : order.payment.status ===
+                                                          "Rejected"
+                                                        ? "red"
+                                                        : "orange",
                                             }}
                                         >
                                             {order.payment.status}
@@ -150,23 +199,36 @@ export default function Orders() {
                                         Ref: {order.payment.reference}
                                     </p>
 
-                                    {/* 🔥 ADD THIS */}
-                                    {order.payment.status === "Rejected" && order.payment.rejectReason && (
-                                        <p style={{ color: "red", fontSize: "12px", marginTop: "5px" }}>
-                                            Reason: {order.payment.rejectReason}
-                                        </p>
-                                    )}
-
+                                    {order.payment.status === "Rejected" &&
+                                        order.payment.rejectReason && (
+                                            <p
+                                                style={{
+                                                    color: "red",
+                                                    fontSize: "12px",
+                                                    marginTop: "5px",
+                                                }}
+                                            >
+                                                Reason:{" "}
+                                                {order.payment.rejectReason}
+                                            </p>
+                                        )}
                                 </div>
                             )}
-
                         </div>
                     ))}
                 </div>
             )}
+
+            {/* MODAL */}
             {selectedProof && (
-                <div style={styles.modalOverlay} onClick={() => setSelectedProof(null)}>
-                    <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+                <div
+                    style={styles.modalOverlay}
+                    onClick={() => setSelectedProof(null)}
+                >
+                    <div
+                        style={styles.modal}
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <img
                             src={selectedProof}
                             alt="payment proof"
@@ -186,7 +248,7 @@ export default function Orders() {
     );
 }
 
-/* STYLES */
+/* ================= STYLES ================= */
 const styles = {
     page: {
         padding: "30px",
@@ -198,7 +260,32 @@ const styles = {
         fontSize: "28px",
         fontWeight: "700",
         marginBottom: "20px",
-        color: "#111827",
+    },
+
+    tabs: {
+        display: "flex",
+        gap: "10px",
+        marginBottom: "20px",
+        borderBottom: "1px solid #ddd",
+        overflowX: "auto",
+    },
+
+    tabBtn: {
+        padding: "10px 15px",
+        background: "transparent",
+        border: "none",
+        cursor: "pointer",
+        fontWeight: "600",
+        display: "flex",
+        alignItems: "center",
+        gap: "5px",
+    },
+
+    badge: {
+        background: "#e5e7eb",
+        borderRadius: "50%",
+        padding: "3px 8px",
+        fontSize: "12px",
     },
 
     empty: {
@@ -224,7 +311,6 @@ const styles = {
     header: {
         display: "flex",
         justifyContent: "space-between",
-        alignItems: "center",
         marginBottom: "15px",
     },
 
@@ -235,16 +321,9 @@ const styles = {
         gap: "5px",
     },
 
-    orderId: {
-        fontWeight: "600",
-        margin: 0,
-    },
+    orderId: { fontWeight: "600", margin: 0 },
 
-    date: {
-        fontSize: "12px",
-        color: "#6b7280",
-        margin: 0,
-    },
+    date: { fontSize: "12px", color: "#6b7280", margin: 0 },
 
     status: {
         padding: "5px 10px",
@@ -259,18 +338,12 @@ const styles = {
         background: "#e5e7eb",
         padding: "4px 8px",
         borderRadius: "10px",
-        fontWeight: "600",
     },
 
-    items: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "10px",
-    },
+    items: { display: "flex", flexDirection: "column", gap: "10px" },
 
     item: {
         display: "flex",
-        alignItems: "center",
         gap: "10px",
         padding: "10px",
         background: "#f9fafb",
@@ -284,21 +357,9 @@ const styles = {
         borderRadius: "8px",
     },
 
-    itemInfo: {
-        display: "flex",
-        flexDirection: "column",
-    },
+    name: { margin: 0, fontWeight: "600" },
 
-    name: {
-        margin: 0,
-        fontWeight: "600",
-    },
-
-    price: {
-        margin: 0,
-        color: "#22c55e",
-        fontWeight: "bold",
-    },
+    price: { margin: 0, color: "#22c55e", fontWeight: "bold" },
 
     footer: {
         marginTop: "10px",
@@ -309,12 +370,11 @@ const styles = {
 
     gcashBtn: {
         marginTop: "10px",
-        padding: "10px 15px",
-        border: "none",
+        padding: "10px",
         borderRadius: "8px",
         background: "#06b6d4",
         color: "white",
-        fontWeight: "bold",
+        border: "none",
         cursor: "pointer",
     },
 
@@ -323,16 +383,8 @@ const styles = {
         padding: "10px",
         background: "#f9fafb",
         borderRadius: "10px",
-        border: "1px solid #e5e7eb",
     },
 
-    paymentImg: {
-        width: "100%",
-        maxHeight: "180px",
-        objectFit: "contain",
-        borderRadius: "8px",
-        marginTop: "5px",
-    },
     viewBtn: {
         marginTop: "8px",
         padding: "8px 12px",
@@ -340,7 +392,6 @@ const styles = {
         borderRadius: "8px",
         background: "#6366f1",
         color: "#fff",
-        fontWeight: "bold",
         cursor: "pointer",
     },
 
@@ -354,33 +405,27 @@ const styles = {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        zIndex: 999,
     },
 
     modal: {
         background: "#fff",
         padding: "15px",
         borderRadius: "10px",
-        maxWidth: "500px",
-        width: "90%",
-        textAlign: "center",
     },
 
     modalImg: {
         width: "100%",
-        borderRadius: "8px",
         maxHeight: "400px",
         objectFit: "contain",
     },
 
     closeBtn: {
         marginTop: "10px",
-        padding: "8px 12px",
-        border: "none",
-        borderRadius: "6px",
+        padding: "8px",
         background: "#ef4444",
         color: "#fff",
+        border: "none",
+        borderRadius: "6px",
         cursor: "pointer",
     },
-
 };
