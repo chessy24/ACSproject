@@ -47,8 +47,23 @@ function Orders() {
     }
   };
 
-  const statusOptions = ["Pending", "Shipped", "Delivered"];
+  // ✅ ADDED Cancelled
+  const statusOptions = ["Pending", "Shipped", "Delivered", "Cancelled"];
   const compartmentOptions = ["1", "2", "3", "4", "5", "6", "7", "8"];
+
+  // ✅ STATUS COLOR HELPER
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Delivered":
+        return "#22c55e"; // green
+      case "Shipped":
+        return "#3b82f6"; // blue
+      case "Cancelled":
+        return "#ef4444"; // 🔥 RED
+      default:
+        return "#f59e0b"; // yellow (pending)
+    }
+  };
 
   const filteredOrders = orders
     .filter((o) => (filter === "All" ? true : o.status === filter))
@@ -80,7 +95,7 @@ function Orders() {
 
       {/* TABS */}
       <div style={styles.tabs}>
-        {["All", "Pending", "Shipped", "Delivered"].map((tab) => (
+        {["All", "Pending", "Shipped", "Delivered", "Cancelled"].map((tab) => (
           <button
             key={tab}
             onClick={() => setFilter(tab)}
@@ -164,12 +179,7 @@ function Orders() {
                   }
                   style={{
                     ...styles.pill,
-                    background:
-                      order.status === "Delivered"
-                        ? "#22c55e"
-                        : order.status === "Shipped"
-                        ? "#3b82f6"
-                        : "#f59e0b",
+                    background: getStatusColor(order.status),
                   }}
                 >
                   {order.status}
