@@ -98,19 +98,44 @@ function Orders() {
       {/* ORDERS */}
       {filteredOrders.map((order) => (
         <div key={order._id} style={styles.card}>
+          
           <div style={styles.header}>
             
-            {/* LEFT */}
+            {/* LEFT SIDE */}
             <div style={styles.left}>
-              <p style={styles.name}>{order.userId?.name || "Unknown"}</p>
-              <p style={styles.small}>{order.userId?.email || "—"}</p>
-              <p style={styles.small}>Order #{order._id.slice(-6)}</p>
+              
+              <div style={styles.field}>
+                <span style={styles.label}>Name</span>
+                <span style={styles.value}>
+                  {order.userId?.name || "Unknown"}
+                </span>
+              </div>
 
-              <p style={styles.total}>₱{order.total}</p>
+              <div style={styles.field}>
+                <span style={styles.label}>Email</span>
+                <span style={styles.value}>
+                  {order.userId?.email || "—"}
+                </span>
+              </div>
 
-              <p style={styles.password}>
-                Password: {order.compartmentPassword || "—"}
-              </p>
+              <div style={styles.field}>
+                <span style={styles.label}>Order</span>
+                <span style={styles.value}>
+                  #{order._id.slice(-6)}
+                </span>
+              </div>
+
+              <div style={styles.field}>
+                <span style={styles.label}>Total</span>
+                <span style={styles.price}>₱{order.total}</span>
+              </div>
+
+              <div style={styles.field}>
+                <span style={styles.label}>Password</span>
+                <span style={styles.password}>
+                  {order.compartmentPassword || "—"}
+                </span>
+              </div>
 
               {order.userId?.idImage ? (
                 <div
@@ -124,12 +149,12 @@ function Orders() {
               )}
             </div>
 
-            {/* RIGHT STATUS AREA */}
+            {/* RIGHT SIDE */}
             <div style={styles.statusGroup}>
 
               {/* ORDER STATUS */}
               <div style={styles.statusBlock}>
-                <p style={styles.label}>Order Status</p>
+                <p style={styles.smallLabel}>Order</p>
 
                 <div
                   onClick={() =>
@@ -168,9 +193,9 @@ function Orders() {
                 )}
               </div>
 
-              {/* PAYMENT STATUS */}
+              {/* PAYMENT */}
               <div style={styles.statusBlock}>
-                <p style={styles.label}>Payment</p>
+                <p style={styles.smallLabel}>Payment</p>
 
                 <div
                   style={{
@@ -190,7 +215,7 @@ function Orders() {
 
               {/* COMPARTMENT */}
               <div style={styles.statusBlock}>
-                <p style={styles.label}>Compartment</p>
+                <p style={styles.smallLabel}>Comp</p>
 
                 <div
                   onClick={() =>
@@ -293,7 +318,7 @@ const styles = {
 
   card: {
     background: "#fff",
-    padding: "15px",
+    padding: "16px",
     borderRadius: "12px",
     marginBottom: "12px",
   },
@@ -302,25 +327,37 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     flexWrap: "wrap",
-    gap: "10px",
+    gap: "20px",
   },
 
   left: {
-    minWidth: "220px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "6px",
+    minWidth: "200px",
+    flex: 1,
   },
 
-  name: {
-    fontSize: "15px",
-    fontWeight: "700",
+  field: {
+    display: "flex",
+    gap: "6px",
+    flexWrap: "wrap",
   },
 
-  small: {
+  label: {
     fontSize: "12px",
     color: "#6b7280",
+    fontWeight: "600",
+    minWidth: "70px",
   },
 
-  total: {
-    fontSize: "15px",
+  value: {
+    fontSize: "13px",
+    fontWeight: "500",
+  },
+
+  price: {
+    fontSize: "14px",
     fontWeight: "700",
   },
 
@@ -328,16 +365,13 @@ const styles = {
     fontSize: "12px",
     background: "#111827",
     color: "white",
-    padding: "4px 8px",
-    borderRadius: "8px",
-    display: "inline-block",
-    marginTop: "5px",
+    padding: "2px 8px",
+    borderRadius: "6px",
   },
 
   statusGroup: {
     display: "flex",
     gap: "12px",
-    alignItems: "flex-start",
     flexWrap: "wrap",
   },
 
@@ -346,13 +380,12 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    gap: "4px",
   },
 
-  label: {
+  smallLabel: {
     fontSize: "10px",
     color: "#6b7280",
-    fontWeight: "600",
+    marginBottom: "4px",
   },
 
   pill: {
@@ -361,6 +394,7 @@ const styles = {
     fontSize: "12px",
     color: "white",
     fontWeight: "600",
+    cursor: "pointer",
   },
 
   compPill: {
@@ -378,10 +412,9 @@ const styles = {
     top: "55px",
     background: "#fff",
     border: "1px solid #e5e7eb",
-    borderRadius: "10px",
+    borderRadius: "8px",
     width: "130px",
-    zIndex: 20,
-    overflow: "hidden",
+    zIndex: 10,
   },
 
   compDropdown: {
@@ -389,9 +422,9 @@ const styles = {
     top: "55px",
     background: "#fff",
     border: "1px solid #e5e7eb",
-    borderRadius: "10px",
+    borderRadius: "8px",
     width: "150px",
-    zIndex: 20,
+    zIndex: 10,
   },
 
   dropdownItem: {
@@ -444,7 +477,6 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 1000,
   },
 
   fullImage: {
