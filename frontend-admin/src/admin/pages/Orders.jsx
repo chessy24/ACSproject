@@ -7,6 +7,7 @@ function Orders() {
   const [filter, setFilter] = useState("Pending");
   const [search, setSearch] = useState("");
   const [openStatus, setOpenStatus] = useState(null);
+  const [openComp, setOpenComp] = useState(null);
 
   useEffect(() => {
     fetchOrders();
@@ -50,9 +51,7 @@ function Orders() {
   const compartmentOptions = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
   const filteredOrders = orders
-    .filter((o) =>
-      filter === "All" ? true : o.status === filter
-    )
+    .filter((o) => (filter === "All" ? true : o.status === filter))
     .filter((o) => {
       const k = search.toLowerCase();
       return (
@@ -99,24 +98,11 @@ function Orders() {
       {/* ORDERS */}
       {filteredOrders.map((order) => (
         <div key={order._id} style={styles.card}>
-          
-          {/* HEADER */}
           <div style={styles.header}>
-            
-            {/* LEFT SIDE */}
-            <div style={styles.left}>
-              <p style={styles.name}>
-                {order.userId?.name || "Unknown"}
-              </p>
-
-              <p style={styles.small}>
-                {order.userId?.email || "—"}
-              </p>
-
-              <p style={styles.small}>
-                Order #{order._id.slice(-6)}
-              </p>
-
+            <div>
+              <p style={styles.name}>{order.userId?.name || "Unknown"}</p>
+              <p style={styles.small}>{order.userId?.email || "—"}</p>
+              <p style={styles.small}>Order #{order._id.slice(-6)}</p>
               <p style={styles.total}>₱{order.total}</p>
 
               <p style={styles.password}>
@@ -135,16 +121,13 @@ function Orders() {
               )}
             </div>
 
-            {/* RIGHT BADGES */}
+            {/* BADGES */}
             <div style={styles.badges}>
-              
               {/* STATUS */}
               <div style={{ position: "relative" }}>
                 <div
                   onClick={() =>
-                    setOpenStatus(
-                      openStatus === order._id ? null : order._id
-                    )
+                    setOpenStatus(openStatus === order._id ? null : order._id)
                   }
                   style={{
                     ...styles.statusPill,
@@ -192,31 +175,40 @@ function Orders() {
                 {order.paymentStatus}
               </span>
 
-              {/* COMP */}
-              <span style={styles.comp}>
-                Comp #{order.compartment || "—"}
-              </span>
+              {/* COMPARTMENT (NEW UI) */}
+              <div style={{ position: "relative" }}>
+                <div
+                  onClick={() =>
+                    setOpenComp(openComp === order._id ? null : order._id)
+                  }
+                  style={styles.compPill}
+                >
+                  Comp #{order.compartment || "—"}
+                </div>
+
+                {openComp === order._id && (
+                  <div style={styles.compDropdown}>
+                    {compartmentOptions.map((c) => (
+                      <div
+                        key={c}
+                        onClick={() => {
+                          updateOrder(order._id, {
+                            compartment: c,
+                            compartmentPassword:
+                              order.compartmentPassword,
+                          });
+                          setOpenComp(null);
+                        }}
+                        style={styles.dropdownItem}
+                      >
+                        Compartment {c}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-
-          {/* COMPARTMENT SELECT */}
-          <select
-            value={order.compartment || ""}
-            onChange={(e) =>
-              updateOrder(order._id, {
-                compartment: e.target.value,
-                compartmentPassword: order.compartmentPassword,
-              })
-            }
-            style={styles.select}
-          >
-            <option value="">Select Compartment</option>
-            {compartmentOptions.map((c) => (
-              <option key={c} value={c}>
-                Compartment {c}
-              </option>
-            ))}
-          </select>
 
           {/* ITEMS */}
           <div>
@@ -230,15 +222,18 @@ function Orders() {
               </div>
             ))}
           </div>
+
+          {/* ID MODAL */}
+          {selectedImage && (
+            <div
+              style={styles.modal}
+              onClick={() => setSelectedImage(null)}
+            >
+              <img src={selectedImage} style={styles.fullImage} />
+            </div>
+          )}
         </div>
       ))}
-
-      {/* MODAL */}
-      {selectedImage && (
-        <div style={styles.modal} onClick={() => setSelectedImage(null)}>
-          <img src={selectedImage} style={styles.fullImage} />
-        </div>
-      )}
     </div>
   );
 }
@@ -297,10 +292,6 @@ const styles = {
     gap: "10px",
   },
 
-  left: {
-    minWidth: "220px",
-  },
-
   name: {
     fontSize: "15px",
     fontWeight: "700",
@@ -314,7 +305,6 @@ const styles = {
   total: {
     fontSize: "15px",
     fontWeight: "700",
-    marginTop: "4px",
   },
 
   password: {
@@ -330,13 +320,23 @@ const styles = {
   badges: {
     display: "flex",
     gap: "6px",
-    alignItems: "center",
+    alignItems: "flex-start",
   },
 
   statusPill: {
     padding: "6px 12px",
     borderRadius: "999px",
     fontSize: "12px",
+    color: "white",
+    fontWeight: "600",
+    cursor: "pointer",
+  },
+
+  compPill: {
+    padding: "6px 12px",
+    borderRadius: "999px",
+    fontSize: "12px",
+    background: "#6366f1",
     color: "white",
     fontWeight: "600",
     cursor: "pointer",
@@ -350,37 +350,32 @@ const styles = {
     fontWeight: "600",
   },
 
-  comp: {
-    background: "#6366f1",
-    color: "white",
-    padding: "5px 10px",
-    borderRadius: "999px",
-    fontSize: "11px",
-  },
-
   dropdown: {
     position: "absolute",
     background: "#fff",
     border: "1px solid #e5e7eb",
-    borderRadius: "8px",
-    width: "120px",
-    marginTop: "5px",
-    zIndex: 10,
+    borderRadius: "10px",
+    width: "130px",
+    marginTop: "6px",
+    zIndex: 20,
+    overflow: "hidden",
+  },
+
+  compDropdown: {
+    position: "absolute",
+    background: "#fff",
+    border: "1px solid #e5e7eb",
+    borderRadius: "10px",
+    width: "160px",
+    marginTop: "6px",
+    zIndex: 20,
+    overflow: "hidden",
   },
 
   dropdownItem: {
-    padding: "8px",
+    padding: "10px",
     cursor: "pointer",
     fontSize: "13px",
-  },
-
-  select: {
-    marginTop: "8px",
-    padding: "8px",
-    width: "100%",
-    maxWidth: "220px",
-    borderRadius: "6px",
-    border: "1px solid #d1d5db",
   },
 
   item: {
