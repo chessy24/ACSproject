@@ -85,6 +85,15 @@ router.get("/", async (req, res) => {
   res.json(payments);
 });
 
+router.get("/user/:userId", async (req, res) => {
+  try {
+    const payments = await Payment.find({ userId });
+    res.json(payments);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // UPDATE PAYMENT STATUS
 router.put("/:id", async (req, res) => {
   try {

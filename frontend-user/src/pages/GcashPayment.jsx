@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import qr from "../assets/QRforDisplay.jpg";
-import backendUrl from "../../config"; // adjust path if needed
+import backendUrl from "../../config";
 
 function GcashPayment() {
     const { orderId } = useParams();
@@ -15,6 +15,8 @@ function GcashPayment() {
         proof: null,
     });
 
+    const [loading, setLoading] = useState(false); // 🔥 prevent double submit
+
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
@@ -26,22 +28,34 @@ function GcashPayment() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // ❌ SAFETY CHECK
+        // 🔥 CONFIRM FIRST
+        const confirmSubmit = window.confirm(
+            "Are you sure you want to submit this payment proof?"
+        );
+        if (!confirmSubmit) return;
+
         if (!user?._id && !user?.id) {
             alert("Please login again");
             return;
         }
 
-        const userId = user._id || user.id;
-
-        const data = new FormData();
-        data.append("name", form.name);
-        data.append("reference", form.reference);
-        data.append("proof", form.proof);
-        data.append("orderId", orderId);
-        data.append("userId", userId); // ✅ FIXED
+        if (!form.proof) {
+            alert("Please upload proof of payment");
+            return;
+        }
 
         try {
+            setLoading(true);
+
+            const userId = user._id || user.id;
+
+            const data = new FormData();
+            data.append("name", form.name);
+            data.append("reference", form.reference);
+            data.append("proof", form.proof);
+            data.append("orderId", orderId);
+            data.append("userId", userId);
+
             const res = await fetch(`${backendUrl}/api/payments/gcash`, {
                 method: "POST",
                 body: data,
@@ -52,15 +66,18 @@ function GcashPayment() {
             if (!res.ok) {
                 console.log(result);
                 alert("Payment failed");
+                setLoading(false);
                 return;
             }
 
-            alert("Payment submitted!");
+            alert("Payment submitted successfully!");
             navigate("/orders");
 
         } catch (err) {
             console.log(err);
             alert("Error submitting payment");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -68,7 +85,7 @@ function GcashPayment() {
         <div style={styles.page}>
             <div style={styles.card}>
 
-                <h2 style={{ color: "black" }}>GCash Payment</h2>
+                <h2 style={styles.title}>GCash Payment</h2>
 
                 <img
                     src={qr}
@@ -101,8 +118,15 @@ function GcashPayment() {
                         required
                     />
 
-                    <button style={styles.button}>
-                        Submit Payment Proof
+                    <button
+                        style={{
+                            ...styles.button,
+                            opacity: loading ? 0.6 : 1,
+                            cursor: loading ? "not-allowed" : "pointer",
+                        }}
+                        disabled={loading}
+                    >
+                        {loading ? "Submitting..." : "Submit Payment Proof"}
                     </button>
 
                 </form>
@@ -114,17 +138,19 @@ function GcashPayment() {
 
 export default GcashPayment;
 
+/* ================= STYLES ================= */
 const styles = {
     page: {
         display: "flex",
         justifyContent: "center",
-        padding: "40px",
+        padding: "20px",
         background: "#f3f4f6",
         minHeight: "100vh",
     },
 
     card: {
-        width: "400px",
+        width: "100%",
+        maxWidth: "420px", // 🔥 mobile friendly
         background: "#fff",
         padding: "20px",
         borderRadius: "12px",
@@ -132,10 +158,15 @@ const styles = {
         boxShadow: "0 5px 20px rgba(0,0,0,0.1)",
     },
 
+    title: {
+        color: "black",
+        marginBottom: "10px",
+    },
+
     qr: {
         width: "100%",
         height: "auto",
-        maxHeight: "400px",
+        maxHeight: "350px",
         objectFit: "contain",
         margin: "15px 0",
     },
@@ -153,12 +184,11 @@ const styles = {
     },
 
     button: {
-        padding: "10px",
+        padding: "12px",
         background: "#021150",
         color: "white",
         border: "none",
         borderRadius: "6px",
-        cursor: "pointer",
         fontWeight: "bold",
     },
 };

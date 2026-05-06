@@ -6,35 +6,85 @@ export default function Orders() {
     const [orders, setOrders] = useState([]);
     const [selectedProof, setSelectedProof] = useState(null);
     const [activeTab, setActiveTab] = useState("All");
+    const [isPaying, setIsPaying] = useState(() => {
+    const saved = localStorage.getItem("payingOrders");
+    return saved ? JSON.parse(saved) : {};
+});
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchOrders = async () => {
-            try {
-                const user = JSON.parse(localStorage.getItem("user"));
-
-                if (!user) return;
-
-                const userId = user.id || user._id;
-                if (!userId) return;
-
-                const res = await fetch(
-                    `${backendUrl}/api/orders/user-with-payments/${userId}`
-                );
-                const data = await res.json();
-
-                setOrders(Array.isArray(data) ? data : []);
-            } catch (error) {
-                console.error(error);
-                setOrders([]);
-            }
-        };
-
         fetchOrders();
     }, []);
 
+    const fetchOrders = async () => {
+        try {
+            const user = JSON.parse(localStorage.getItem("user"));
+            if (!user) return;
+
+            const userId = user.id || user._id;
+            if (!userId) return;
+
+            const res = await fetch(
+                `${backendUrl}/api/orders/user-with-payments/${userId}`
+            );
+            const data = await res.json();
+
+            setOrders(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error(error);
+            setOrders([]);
+        }
+    };
+
     /* =========================
-       FILTER + COUNTS
+       CANCEL ORDER
+    ========================= */
+    const handleCancel = async (orderId) => {
+    const confirmCancel = window.confirm(
+        "⚠️ Are you sure you want to cancel this order?"
+    );
+
+    if (!confirmCancel) return;
+
+    try {
+        const res = await fetch(`${backendUrl}/api/orders/${orderId}/cancel`, {
+            method: "PUT",
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            alert(data.message || "Cancel failed");
+            return;
+        }
+
+        alert("Order cancelled successfully");
+        fetchOrders();
+    } catch (err) {
+        console.log(err);
+        alert("Error cancelling order");
+    }
+};
+    /* =========================
+       PAY CONFIRMATION
+    ========================= */
+    const handlePay = (orderId) => {
+        const confirmPay = window.confirm(
+            "Are you sure you want to proceed with GCash payment?"
+        );
+
+        if (!confirmPay) return;
+
+        // immediately hide cancel button
+        setIsPaying((prev) => ({
+            ...prev,
+            [orderId]: true,
+        }));
+
+        navigate(`/gcash-payment/${orderId}`);
+    };
+    /* =========================
+       FILTER
     ========================= */
     const filteredOrders = orders.filter((order) => {
         if (activeTab === "All") return true;
@@ -50,7 +100,7 @@ export default function Orders() {
         <div style={styles.page}>
             <h1 style={styles.title}>My Orders</h1>
 
-            {/* 🔥 TABS */}
+            {/* TABS */}
             <div style={styles.tabs}>
                 {["All", "Pending", "Shipped", "Delivered", "Cancelled"].map((tab) => (
                     <button
@@ -99,24 +149,14 @@ export default function Orders() {
                                                 order.status === "Pending"
                                                     ? "#fbbf24"
                                                     : order.status === "Delivered"
-                                                    ? "#22c55e"
-                                                    : order.status === "Cancelled"
-                                                    ? "#ef4444"
-                                                    : "#60a5fa",
+                                                        ? "#22c55e"
+                                                        : order.status === "Cancelled"
+                                                            ? "#ef4444"
+                                                            : "#60a5fa",
                                         }}
                                     >
                                         {order.status}
                                     </span>
-
-                                    <span style={styles.compartment}>
-                                        Compartment #{order.compartment || "TBA"}
-                                    </span>
-
-                                    {order.compartmentPassword && (
-                                        <span style={styles.password}>
-                                            Password: {order.compartmentPassword}
-                                        </span>
-                                    )}
                                 </div>
                             </div>
 
@@ -132,7 +172,7 @@ export default function Orders() {
                                             }
                                         />
 
-                                        <div style={styles.itemInfo}>
+                                        <div>
                                             <p style={styles.name}>{item.name}</p>
                                             <p style={styles.price}>₱{item.price}</p>
                                         </div>
@@ -144,15 +184,12 @@ export default function Orders() {
                             <div style={styles.footer}>
                                 <h3>Total: ₱{order.total}</h3>
 
+                                {/* PAY BUTTON */}
                                 {order.status === "Pending" &&
                                     (!order.payment ||
                                         order.payment.status === "Rejected") && (
                                         <button
-                                            onClick={() =>
-                                                navigate(
-                                                    `/gcash-payment/${order._id}`
-                                                )
-                                            }
+                                            onClick={() => handlePay(order._id)}
                                             style={styles.gcashBtn}
                                         >
                                             {order.payment?.status === "Rejected"
@@ -160,15 +197,21 @@ export default function Orders() {
                                                 : "Pay with GCash 💳"}
                                         </button>
                                     )}
+
+                                {/* CANCEL BUTTON */}
+                                {order.status === "Pending" && !isPaying[order._id] && (
+                                    <button
+                                        onClick={() => handleCancel(order._id)}
+                                        style={styles.cancelBtn}
+                                    >
+                                        Cancel Order ❌
+                                    </button>
+                                )}
                             </div>
 
                             {/* PAYMENT */}
                             {order.payment && (
                                 <div style={styles.paymentBox}>
-                                    <h4 style={{ margin: "0 0 5px 0" }}>
-                                        Payment Proof
-                                    </h4>
-
                                     <button
                                         style={styles.viewBtn}
                                         onClick={() =>
@@ -177,41 +220,6 @@ export default function Orders() {
                                     >
                                         View Payment Proof 👁️
                                     </button>
-
-                                    <p style={{ fontSize: "12px", marginTop: "5px" }}>
-                                        Status:{" "}
-                                        <b
-                                            style={{
-                                                color:
-                                                    order.payment.status === "Approved"
-                                                        ? "green"
-                                                        : order.payment.status ===
-                                                          "Rejected"
-                                                        ? "red"
-                                                        : "orange",
-                                            }}
-                                        >
-                                            {order.payment.status}
-                                        </b>
-                                    </p>
-
-                                    <p style={{ fontSize: "12px" }}>
-                                        Ref: {order.payment.reference}
-                                    </p>
-
-                                    {order.payment.status === "Rejected" &&
-                                        order.payment.rejectReason && (
-                                            <p
-                                                style={{
-                                                    color: "red",
-                                                    fontSize: "12px",
-                                                    marginTop: "5px",
-                                                }}
-                                            >
-                                                Reason:{" "}
-                                                {order.payment.rejectReason}
-                                            </p>
-                                        )}
                                 </div>
                             )}
                         </div>
@@ -231,7 +239,7 @@ export default function Orders() {
                     >
                         <img
                             src={selectedProof}
-                            alt="payment proof"
+                            alt="proof"
                             style={styles.modalImg}
                         />
 
@@ -277,7 +285,6 @@ const styles = {
         cursor: "pointer",
         fontWeight: "600",
         display: "flex",
-        alignItems: "center",
         gap: "5px",
     },
 
@@ -311,18 +318,10 @@ const styles = {
     header: {
         display: "flex",
         justifyContent: "space-between",
-        marginBottom: "15px",
-    },
-
-    rightHeader: {
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-end",
-        gap: "5px",
+        marginBottom: "10px",
     },
 
     orderId: { fontWeight: "600", margin: 0 },
-
     date: { fontSize: "12px", color: "#6b7280", margin: 0 },
 
     status: {
@@ -331,13 +330,6 @@ const styles = {
         color: "#fff",
         fontSize: "12px",
         fontWeight: "bold",
-    },
-
-    compartment: {
-        fontSize: "12px",
-        background: "#e5e7eb",
-        padding: "4px 8px",
-        borderRadius: "10px",
     },
 
     items: { display: "flex", flexDirection: "column", gap: "10px" },
@@ -358,7 +350,6 @@ const styles = {
     },
 
     name: { margin: 0, fontWeight: "600" },
-
     price: { margin: 0, color: "#22c55e", fontWeight: "bold" },
 
     footer: {
@@ -366,13 +357,25 @@ const styles = {
         textAlign: "right",
         borderTop: "1px solid #eee",
         paddingTop: "10px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "8px",
+        alignItems: "flex-end",
     },
 
     gcashBtn: {
-        marginTop: "10px",
         padding: "10px",
         borderRadius: "8px",
         background: "#06b6d4",
+        color: "white",
+        border: "none",
+        cursor: "pointer",
+    },
+
+    cancelBtn: {
+        padding: "10px",
+        borderRadius: "8px",
+        background: "#ef4444",
         color: "white",
         border: "none",
         cursor: "pointer",
@@ -386,12 +389,11 @@ const styles = {
     },
 
     viewBtn: {
-        marginTop: "8px",
         padding: "8px 12px",
-        border: "none",
         borderRadius: "8px",
         background: "#6366f1",
         color: "#fff",
+        border: "none",
         cursor: "pointer",
     },
 

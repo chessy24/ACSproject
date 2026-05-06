@@ -161,4 +161,44 @@ router.put("/:id/status", async (req, res) => {
   }
 });
 
+/* =========================
+   CANCEL ORDER (USER)
+========================= */
+router.put("/:id/cancel", async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // ❌ cannot cancel if already delivered
+    if (order.status === "Delivered") {
+      return res.status(400).json({
+        message: "Cannot cancel delivered order",
+      });
+    }
+
+    // ❌ cannot cancel if already paid
+    const payment = await Payment.findOne({
+      orderId: order._id,
+      status: "Approved",
+    });
+
+    if (payment) {
+      return res.status(400).json({
+        message: "Cannot cancel paid order",
+      });
+    }
+
+    order.status = "Cancelled";
+    await order.save();
+
+    res.json({ message: "Order cancelled successfully" });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 export default router;
