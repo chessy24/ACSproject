@@ -58,7 +58,9 @@ function Orders() {
 
   return (
     <div style={styles.page}>
-      <h1 style={styles.title}>Admin Orders</h1>
+      <h1 style={{ ...styles.title, color: "#000" }}>
+        Admin Orders
+      </h1>
 
       {orders.map((order) => (
         <div key={order._id} style={styles.card}>
@@ -260,21 +262,21 @@ const styles = {
   },
 
   select: {
-  marginTop: "8px",
-  padding: "8px",
-  width: "200px",
+    marginTop: "8px",
+    padding: "8px",
+    width: "200px",
 
-  /* 🔥 FIX VISIBILITY */
-  backgroundColor: "#fff",
-  color: "#111827",
-  border: "1px solid #d1d5db",
-  borderRadius: "6px",
-},
+    /* 🔥 FIX VISIBILITY */
+    backgroundColor: "#fff",
+    color: "#111827",
+    border: "1px solid #d1d5db",
+    borderRadius: "6px",
+  },
 
-option: {
-  color: "#111827",
-  backgroundColor: "#ffffff",
-},
+  option: {
+    color: "#111827",
+    backgroundColor: "#ffffff",
+  },
 
   item: {
     display: "flex",
