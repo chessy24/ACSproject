@@ -6,6 +6,7 @@ function Orders() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [filter, setFilter] = useState("Pending");
   const [search, setSearch] = useState("");
+  const [openStatus, setOpenStatus] = useState(null);
 
   useEffect(() => {
     fetchOrders();
@@ -24,14 +25,11 @@ function Orders() {
 
   const updateOrder = async (id, updates) => {
     try {
-      const res = await fetch(
-        `${backendUrl}/api/orders/${id}/status`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updates),
-        }
-      );
+      const res = await fetch(`${backendUrl}/api/orders/${id}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
 
       const data = await res.json();
 
@@ -51,22 +49,19 @@ function Orders() {
   const statusOptions = ["Pending", "Shipped", "Delivered"];
   const compartmentOptions = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
-  /* ================= FILTER ================= */
-  const filteredByStatus =
-    filter === "All"
-      ? orders
-      : orders.filter((o) => o.status === filter);
+  const filteredOrders = orders
+    .filter((o) =>
+      filter === "All" ? true : o.status === filter
+    )
+    .filter((o) => {
+      const k = search.toLowerCase();
+      return (
+        o.userId?.name?.toLowerCase().includes(k) ||
+        o.userId?.email?.toLowerCase().includes(k) ||
+        o._id?.toLowerCase().includes(k)
+      );
+    });
 
-  const filteredOrders = filteredByStatus.filter((o) => {
-    const keyword = search.toLowerCase();
-    return (
-      o.userId?.name?.toLowerCase().includes(keyword) ||
-      o.userId?.email?.toLowerCase().includes(keyword) ||
-      o._id?.toLowerCase().includes(keyword)
-    );
-  });
-
-  /* ================= COUNTS ================= */
   const getCount = (status) =>
     status === "All"
       ? orders.length
@@ -104,13 +99,28 @@ function Orders() {
       {/* ORDERS */}
       {filteredOrders.map((order) => (
         <div key={order._id} style={styles.card}>
+          
+          {/* HEADER */}
           <div style={styles.header}>
-            <div>
-              <p style={styles.text}>
-                <b>User:</b> {order.userId?.name || "Unknown"}
+            
+            {/* LEFT SIDE */}
+            <div style={styles.left}>
+              <p style={styles.name}>
+                {order.userId?.name || "Unknown"}
               </p>
-              <p style={styles.text}>
-                <b>Email:</b> {order.userId?.email || "—"}
+
+              <p style={styles.small}>
+                {order.userId?.email || "—"}
+              </p>
+
+              <p style={styles.small}>
+                Order #{order._id.slice(-6)}
+              </p>
+
+              <p style={styles.total}>₱{order.total}</p>
+
+              <p style={styles.password}>
+                Password: {order.compartmentPassword || "—"}
               </p>
 
               {order.userId?.idImage ? (
@@ -123,23 +133,51 @@ function Orders() {
               ) : (
                 <p style={styles.noId}>No ID uploaded</p>
               )}
-
-              <p style={styles.text}>
-                <b>Order:</b> #{order._id.slice(-6)}
-              </p>
-
-              <p style={styles.total}>₱{order.total}</p>
-
-              <p style={styles.password}>
-                Password: {order.compartmentPassword || "—"}
-              </p>
             </div>
 
+            {/* RIGHT BADGES */}
             <div style={styles.badges}>
-              <span style={styles.badge}>
-                {order.status}
-              </span>
+              
+              {/* STATUS */}
+              <div style={{ position: "relative" }}>
+                <div
+                  onClick={() =>
+                    setOpenStatus(
+                      openStatus === order._id ? null : order._id
+                    )
+                  }
+                  style={{
+                    ...styles.statusPill,
+                    background:
+                      order.status === "Delivered"
+                        ? "#22c55e"
+                        : order.status === "Shipped"
+                        ? "#3b82f6"
+                        : "#f59e0b",
+                  }}
+                >
+                  {order.status}
+                </div>
 
+                {openStatus === order._id && (
+                  <div style={styles.dropdown}>
+                    {statusOptions.map((s) => (
+                      <div
+                        key={s}
+                        onClick={() => {
+                          updateOrder(order._id, { status: s });
+                          setOpenStatus(null);
+                        }}
+                        style={styles.dropdownItem}
+                      >
+                        {s}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* PAYMENT */}
               <span
                 style={{
                   ...styles.badge,
@@ -149,38 +187,19 @@ function Orders() {
                       : order.paymentStatus === "Rejected"
                       ? "#ef4444"
                       : "#f59e0b",
-                  color: "white",
                 }}
               >
-                Payment: {order.paymentStatus}
+                {order.paymentStatus}
               </span>
 
+              {/* COMP */}
               <span style={styles.comp}>
                 Comp #{order.compartment || "—"}
               </span>
             </div>
           </div>
 
-          {/* STATUS */}
-          <select
-            value={order.status}
-            disabled={
-              order.status === "Delivered" ||
-              order.paymentStatus !== "Approved"
-            }
-            onChange={(e) =>
-              updateOrder(order._id, { status: e.target.value })
-            }
-            style={styles.select}
-          >
-            {statusOptions.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-
-          {/* COMPARTMENT */}
+          {/* COMPARTMENT SELECT */}
           <select
             value={order.compartment || ""}
             onChange={(e) =>
@@ -269,7 +288,6 @@ const styles = {
     padding: "15px",
     borderRadius: "12px",
     marginBottom: "12px",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
   },
 
   header: {
@@ -279,27 +297,55 @@ const styles = {
     gap: "10px",
   },
 
-  text: {
-    fontSize: "13px",
-    margin: "2px 0",
+  left: {
+    minWidth: "220px",
+  },
+
+  name: {
+    fontSize: "15px",
+    fontWeight: "700",
+  },
+
+  small: {
+    fontSize: "12px",
+    color: "#6b7280",
   },
 
   total: {
     fontSize: "15px",
     fontWeight: "700",
+    marginTop: "4px",
+  },
+
+  password: {
+    fontSize: "12px",
+    background: "#111827",
+    color: "white",
+    padding: "4px 8px",
+    borderRadius: "8px",
+    display: "inline-block",
+    marginTop: "5px",
   },
 
   badges: {
     display: "flex",
     gap: "6px",
-    flexWrap: "wrap",
+    alignItems: "center",
+  },
+
+  statusPill: {
+    padding: "6px 12px",
+    borderRadius: "999px",
+    fontSize: "12px",
+    color: "white",
+    fontWeight: "600",
+    cursor: "pointer",
   },
 
   badge: {
     padding: "5px 10px",
-    borderRadius: "20px",
+    borderRadius: "999px",
     fontSize: "11px",
-    background: "#f59e0b",
     color: "white",
     fontWeight: "600",
   },
@@ -308,8 +354,24 @@ const styles = {
     background: "#6366f1",
     color: "white",
     padding: "5px 10px",
-    borderRadius: "20px",
+    borderRadius: "999px",
     fontSize: "11px",
+  },
+
+  dropdown: {
+    position: "absolute",
+    background: "#fff",
+    border: "1px solid #e5e7eb",
+    borderRadius: "8px",
+    width: "120px",
+    marginTop: "5px",
+    zIndex: 10,
+  },
+
+  dropdownItem: {
+    padding: "8px",
+    cursor: "pointer",
+    fontSize: "13px",
   },
 
   select: {
@@ -353,16 +415,6 @@ const styles = {
   noId: {
     fontSize: "12px",
     color: "gray",
-  },
-
-  password: {
-    fontSize: "12px",
-    background: "#111827",
-    color: "white",
-    padding: "4px 8px",
-    borderRadius: "8px",
-    marginTop: "5px",
-    display: "inline-block",
   },
 
   modal: {
