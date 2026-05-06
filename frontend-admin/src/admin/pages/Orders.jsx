@@ -99,10 +99,13 @@ function Orders() {
       {filteredOrders.map((order) => (
         <div key={order._id} style={styles.card}>
           <div style={styles.header}>
-            <div>
+            
+            {/* LEFT */}
+            <div style={styles.left}>
               <p style={styles.name}>{order.userId?.name || "Unknown"}</p>
               <p style={styles.small}>{order.userId?.email || "—"}</p>
               <p style={styles.small}>Order #{order._id.slice(-6)}</p>
+
               <p style={styles.total}>₱{order.total}</p>
 
               <p style={styles.password}>
@@ -121,16 +124,21 @@ function Orders() {
               )}
             </div>
 
-            {/* BADGES */}
-            <div style={styles.badges}>
-              {/* STATUS */}
-              <div style={{ position: "relative" }}>
+            {/* RIGHT STATUS AREA */}
+            <div style={styles.statusGroup}>
+
+              {/* ORDER STATUS */}
+              <div style={styles.statusBlock}>
+                <p style={styles.label}>Order Status</p>
+
                 <div
                   onClick={() =>
-                    setOpenStatus(openStatus === order._id ? null : order._id)
+                    setOpenStatus(
+                      openStatus === order._id ? null : order._id
+                    )
                   }
                   style={{
-                    ...styles.statusPill,
+                    ...styles.pill,
                     background:
                       order.status === "Delivered"
                         ? "#22c55e"
@@ -160,30 +168,37 @@ function Orders() {
                 )}
               </div>
 
-              {/* PAYMENT */}
-              <span
-                style={{
-                  ...styles.badge,
-                  background:
-                    order.paymentStatus === "Approved"
-                      ? "#22c55e"
-                      : order.paymentStatus === "Rejected"
-                      ? "#ef4444"
-                      : "#f59e0b",
-                }}
-              >
-                {order.paymentStatus}
-              </span>
+              {/* PAYMENT STATUS */}
+              <div style={styles.statusBlock}>
+                <p style={styles.label}>Payment</p>
 
-              {/* COMPARTMENT (NEW UI) */}
-              <div style={{ position: "relative" }}>
+                <div
+                  style={{
+                    ...styles.pill,
+                    cursor: "default",
+                    background:
+                      order.paymentStatus === "Approved"
+                        ? "#22c55e"
+                        : order.paymentStatus === "Rejected"
+                        ? "#ef4444"
+                        : "#f59e0b",
+                  }}
+                >
+                  {order.paymentStatus}
+                </div>
+              </div>
+
+              {/* COMPARTMENT */}
+              <div style={styles.statusBlock}>
+                <p style={styles.label}>Compartment</p>
+
                 <div
                   onClick={() =>
                     setOpenComp(openComp === order._id ? null : order._id)
                   }
                   style={styles.compPill}
                 >
-                  Comp #{order.compartment || "—"}
+                  #{order.compartment || "—"}
                 </div>
 
                 {openComp === order._id && (
@@ -207,6 +222,7 @@ function Orders() {
                   </div>
                 )}
               </div>
+
             </div>
           </div>
 
@@ -222,18 +238,15 @@ function Orders() {
               </div>
             ))}
           </div>
-
-          {/* ID MODAL */}
-          {selectedImage && (
-            <div
-              style={styles.modal}
-              onClick={() => setSelectedImage(null)}
-            >
-              <img src={selectedImage} style={styles.fullImage} />
-            </div>
-          )}
         </div>
       ))}
+
+      {/* MODAL */}
+      {selectedImage && (
+        <div style={styles.modal} onClick={() => setSelectedImage(null)}>
+          <img src={selectedImage} style={styles.fullImage} />
+        </div>
+      )}
     </div>
   );
 }
@@ -292,6 +305,10 @@ const styles = {
     gap: "10px",
   },
 
+  left: {
+    minWidth: "220px",
+  },
+
   name: {
     fontSize: "15px",
     fontWeight: "700",
@@ -317,19 +334,33 @@ const styles = {
     marginTop: "5px",
   },
 
-  badges: {
+  statusGroup: {
     display: "flex",
-    gap: "6px",
+    gap: "12px",
     alignItems: "flex-start",
+    flexWrap: "wrap",
   },
 
-  statusPill: {
+  statusBlock: {
+    position: "relative",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "4px",
+  },
+
+  label: {
+    fontSize: "10px",
+    color: "#6b7280",
+    fontWeight: "600",
+  },
+
+  pill: {
     padding: "6px 12px",
     borderRadius: "999px",
     fontSize: "12px",
     color: "white",
     fontWeight: "600",
-    cursor: "pointer",
   },
 
   compPill: {
@@ -342,34 +373,25 @@ const styles = {
     cursor: "pointer",
   },
 
-  badge: {
-    padding: "5px 10px",
-    borderRadius: "999px",
-    fontSize: "11px",
-    color: "white",
-    fontWeight: "600",
-  },
-
   dropdown: {
     position: "absolute",
+    top: "55px",
     background: "#fff",
     border: "1px solid #e5e7eb",
     borderRadius: "10px",
     width: "130px",
-    marginTop: "6px",
     zIndex: 20,
     overflow: "hidden",
   },
 
   compDropdown: {
     position: "absolute",
+    top: "55px",
     background: "#fff",
     border: "1px solid #e5e7eb",
     borderRadius: "10px",
-    width: "160px",
-    marginTop: "6px",
+    width: "150px",
     zIndex: 20,
-    overflow: "hidden",
   },
 
   dropdownItem: {
