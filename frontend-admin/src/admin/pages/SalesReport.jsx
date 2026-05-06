@@ -17,7 +17,6 @@ export default function SalesReport() {
   const [to, setTo] = useState("");
   const [report, setReport] = useState(null);
 
-  // ✅ VALIDATION
   const isDisabled = !from || !to || from > to;
 
   const fetchReport = async () => {
@@ -67,12 +66,12 @@ export default function SalesReport() {
 
   return (
     <div style={styles.page}>
-      <h1 style={{ color: "#000" }}>📊 Sales Report</h1>
+      <h1 style={styles.title}>📊 Sales Report</h1>
 
-      {/* FILTER BAR */}
+      {/* FILTER */}
       <div style={styles.filterBox}>
         <div style={styles.inputGroup}>
-          <label style={styles.label}>From</label>
+          <label>From</label>
           <input
             type="date"
             style={styles.input}
@@ -82,7 +81,7 @@ export default function SalesReport() {
         </div>
 
         <div style={styles.inputGroup}>
-          <label style={styles.label}>To</label>
+          <label>To</label>
           <input
             type="date"
             style={styles.input}
@@ -94,13 +93,12 @@ export default function SalesReport() {
         <button
           style={{
             ...styles.button,
-            opacity: isDisabled ? 0.6 : 1,
-            cursor: isDisabled ? "not-allowed" : "pointer",
+            opacity: isDisabled ? 0.5 : 1,
           }}
           onClick={fetchReport}
           disabled={isDisabled}
         >
-          Generate Report
+          Generate
         </button>
       </div>
 
@@ -111,66 +109,71 @@ export default function SalesReport() {
           </button>
 
           <div id="reportContent" style={styles.reportContainer}>
-            {/* SUMMARY CARDS */}
+            {/* CARDS */}
             <div style={styles.cards}>
               <div style={styles.card}>
-                <h3>Revenue</h3>
+                <h4>Revenue</h4>
                 <p>₱{report.totalRevenue}</p>
               </div>
 
               <div style={styles.card}>
-                <h3>Orders</h3>
+                <h4>Orders</h4>
                 <p>{report.totalOrders}</p>
               </div>
 
               <div style={styles.card}>
-                <h3>Items Sold</h3>
+                <h4>Items</h4>
                 <p>{report.totalItemsSold}</p>
               </div>
             </div>
 
             {/* CHART */}
             <div style={styles.chartBox}>
-              <h2 style={{ color: "#000" }}>Revenue Analytics</h2>
+              <h3>Revenue Analytics</h3>
 
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#3b82f6"
-                    strokeWidth={3}
-                    dot={{ r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <div style={{ width: "100%", height: 250 }}>
+                <ResponsiveContainer>
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" hide />
+                    <YAxis />
+                    <Tooltip />
+                    <Line
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="#3b82f6"
+                      strokeWidth={2}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
 
             {/* TOP PRODUCTS */}
             <div style={styles.section}>
-              <h2 style={{ color: "#000" }}>🔥 Top Products</h2>
+              <h3>🔥 Top Products</h3>
 
               {report.topProducts.map((p, i) => (
                 <div key={i} style={styles.productItem}>
-                  {p.name} <span>({p.qty} sold)</span>
+                  <span>{p.name}</span>
+                  <span>{p.qty} sold</span>
                 </div>
               ))}
             </div>
 
-            {/* ORDERS TABLE */}
+            {/* ORDERS */}
             <div style={styles.section}>
-              <h2 style={{ color: "#000" }}>📦 Orders</h2>
-              {report.orders.map((o) => (
-                <div key={o._id} style={styles.orderItem}>
-                  <span>#{o._id.slice(-6)}</span>
-                  <span>₱{o.total}</span>
-                  <span>{o.status}</span>
-                </div>
-              ))}
+              <h3>📦 Orders</h3>
+
+              <div style={styles.orderList}>
+                {report.orders.map((o) => (
+                  <div key={o._id} style={styles.orderItem}>
+                    <div>#{o._id.slice(-6)}</div>
+                    <div>₱{o.total}</div>
+                    <div>{o.status}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </>
@@ -180,31 +183,30 @@ export default function SalesReport() {
 }
 
 /* =========================
-   STYLES
+   MOBILE-FIRST STYLES
 ========================= */
 const styles = {
   page: {
-    padding: "25px",
+    padding: "15px",
     background: "#f4f6f8",
     minHeight: "100vh",
   },
 
+  title: {
+    fontSize: "20px",
+    marginBottom: "15px",
+  },
+
   filterBox: {
     display: "flex",
-    gap: "15px",
-    alignItems: "flex-end",
-    marginBottom: "20px",
+    flexDirection: "column", // ✅ stack on mobile
+    gap: "10px",
+    marginBottom: "15px",
   },
 
   inputGroup: {
     display: "flex",
     flexDirection: "column",
-  },
-
-  label: {
-    fontSize: "12px",
-    marginBottom: "4px",
-    color: "#333",
   },
 
   input: {
@@ -215,63 +217,64 @@ const styles = {
 
   button: {
     background: "#3b82f6",
-    color: "white",
+    color: "#fff",
+    padding: "10px",
     border: "none",
-    padding: "8px 14px",
     borderRadius: "6px",
   },
 
   pdfBtn: {
+    width: "100%",
     background: "#111",
     color: "#fff",
-    padding: "10px 14px",
+    padding: "10px",
     borderRadius: "6px",
-    marginBottom: "15px",
+    marginBottom: "10px",
     border: "none",
-    cursor: "pointer",
   },
 
   reportContainer: {
-    background: "white",
-    padding: "20px",
+    background: "#fff",
+    padding: "15px",
     borderRadius: "10px",
-    boxShadow: "0 5px 15px rgba(0,0,0,0.08)",
   },
 
   cards: {
     display: "flex",
-    gap: "15px",
-    marginBottom: "20px",
+    flexDirection: "column", // ✅ stack on mobile
+    gap: "10px",
   },
 
   card: {
-    flex: 1,
     background: "#f9fafb",
-    padding: "15px",
-    borderRadius: "10px",
+    padding: "10px",
+    borderRadius: "8px",
     textAlign: "center",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
   },
 
   chartBox: {
-    marginTop: "20px",
-    padding: "15px",
-    background: "#fff",
-    borderRadius: "10px",
+    marginTop: "15px",
   },
 
   section: {
-    marginTop: "25px",
+    marginTop: "20px",
   },
 
   productItem: {
+    display: "flex",
+    justifyContent: "space-between",
     padding: "8px 0",
     borderBottom: "1px solid #eee",
+  },
+
+  orderList: {
+    overflowX: "auto", // ✅ scroll if needed
   },
 
   orderItem: {
     display: "flex",
     justifyContent: "space-between",
+    minWidth: "250px", // ✅ prevents squish
     padding: "8px 0",
     borderBottom: "1px solid #eee",
   },
