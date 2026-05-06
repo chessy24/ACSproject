@@ -4,6 +4,7 @@ import backendUrl from "../../config";
 export default function Dashboard() {
   const [orders, setOrders] = useState([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
+
   const [statusStats, setStatusStats] = useState({
     Pending: 0,
     Shipped: 0,
@@ -13,7 +14,9 @@ export default function Dashboard() {
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // SCREEN DETECT
+  /* =========================
+     SCREEN DETECT
+  ========================= */
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -23,6 +26,9 @@ export default function Dashboard() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  /* =========================
+     FETCH ORDERS
+  ========================= */
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -32,12 +38,26 @@ export default function Dashboard() {
         const ordersArray = Array.isArray(data) ? data : [];
         setOrders(ordersArray);
 
-        const total = ordersArray.reduce(
-          (sum, o) => sum + (o.total || 0),
-          0
-        );
+        /* =========================
+           FIXED REVENUE LOGIC
+           ONLY PAID OR DELIVERED ORDERS
+        ========================= */
+        const total = ordersArray.reduce((sum, o) => {
+          const isPaid = o.paymentStatus === "Approved";
+          const isDelivered = o.status === "Delivered";
+
+          if (isPaid || isDelivered) {
+            return sum + (o.total || 0);
+          }
+
+          return sum;
+        }, 0);
+
         setTotalRevenue(total);
 
+        /* =========================
+           STATUS STATS
+        ========================= */
         const stats = {
           Pending: 0,
           Shipped: 0,
@@ -64,18 +84,8 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div
-      style={{
-        ...styles.page,
-        padding: isMobile ? "20px" : "30px",
-      }}
-    >
-      <h1
-        style={{
-          ...styles.title,
-          fontSize: isMobile ? "22px" : "28px",
-        }}
-      >
+    <div style={{ ...styles.page, padding: isMobile ? "20px" : "30px" }}>
+      <h1 style={{ ...styles.title, fontSize: isMobile ? "22px" : "28px" }}>
         Admin Dashboard
       </h1>
 
@@ -101,12 +111,7 @@ export default function Dashboard() {
       <div style={styles.statusSection}>
         <h2>Status Overview</h2>
 
-        <div
-          style={{
-            ...styles.statusGrid,
-            flexWrap: "wrap",
-          }}
-        >
+        <div style={{ ...styles.statusGrid, flexWrap: "wrap" }}>
           <div style={{ ...styles.statusCard, background: "#fbbf24" }}>
             <h4>Pending</h4>
             <p>{statusStats.Pending}</p>
@@ -158,7 +163,9 @@ export default function Dashboard() {
   );
 }
 
-/* STYLES */
+/* =========================
+   STYLES
+========================= */
 const styles = {
   page: {
     background: "#f3f4f6",
@@ -201,7 +208,7 @@ const styles = {
   },
 
   statusCard: {
-    flex: "1 1 45%", // 👈 auto wrap on mobile
+    flex: "1 1 45%",
     padding: "15px",
     borderRadius: "10px",
     fontWeight: "bold",
