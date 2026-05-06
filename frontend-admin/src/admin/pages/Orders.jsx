@@ -3,7 +3,9 @@ import backendUrl from "../../config";
 
 function Orders() {
   const [orders, setOrders] = useState([]);
-  const [selectedImage, setSelectedImage] = useState(null); // 🔥 modal state
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [filter, setFilter] = useState("Pending");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     fetchOrders();
@@ -46,31 +48,71 @@ function Orders() {
     }
   };
 
-  const handleAssignCompartment = (order, value) => {
-    updateOrder(order._id, {
-      compartment: value,
-      compartmentPassword: order.compartmentPassword,
-    });
-  };
-
   const statusOptions = ["Pending", "Shipped", "Delivered"];
   const compartmentOptions = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
+  /* ================= FILTER ================= */
+  const filteredByStatus =
+    filter === "All"
+      ? orders
+      : orders.filter((o) => o.status === filter);
+
+  const filteredOrders = filteredByStatus.filter((o) => {
+    const keyword = search.toLowerCase();
+    return (
+      o.userId?.name?.toLowerCase().includes(keyword) ||
+      o.userId?.email?.toLowerCase().includes(keyword) ||
+      o._id?.toLowerCase().includes(keyword)
+    );
+  });
+
+  /* ================= COUNTS ================= */
+  const getCount = (status) =>
+    status === "All"
+      ? orders.length
+      : orders.filter((o) => o.status === status).length;
+
   return (
     <div style={styles.page}>
-      <h1 style={{ ...styles.title, color: "#000" }}>
-        Admin Orders
-      </h1>
+      <h1 style={styles.title}>Admin Orders</h1>
 
-      {orders.map((order) => (
+      {/* SEARCH */}
+      <input
+        placeholder="Search name, email, order ID..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        style={styles.search}
+      />
+
+      {/* TABS */}
+      <div style={styles.tabs}>
+        {["All", "Pending", "Shipped", "Delivered"].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setFilter(tab)}
+            style={{
+              ...styles.tab,
+              background: filter === tab ? "#111827" : "#e5e7eb",
+              color: filter === tab ? "#fff" : "#111827",
+            }}
+          >
+            {tab} ({getCount(tab)})
+          </button>
+        ))}
+      </div>
+
+      {/* ORDERS */}
+      {filteredOrders.map((order) => (
         <div key={order._id} style={styles.card}>
-
           <div style={styles.header}>
             <div>
-              <p>User: {order.userId?.name || "Unknown"}</p>
-              <p>Email: {order.userId?.email || "—"}</p>
+              <p style={styles.text}>
+                <b>User:</b> {order.userId?.name || "Unknown"}
+              </p>
+              <p style={styles.text}>
+                <b>Email:</b> {order.userId?.email || "—"}
+              </p>
 
-              {/* 🔥 VIEW ID BUTTON */}
               {order.userId?.idImage ? (
                 <div
                   style={styles.idBox}
@@ -79,13 +121,14 @@ function Orders() {
                   View ID
                 </div>
               ) : (
-                <p style={{ fontSize: "12px", color: "gray" }}>
-                  No ID uploaded
-                </p>
+                <p style={styles.noId}>No ID uploaded</p>
               )}
 
-              <p>Order #{order._id.slice(-6)}</p>
-              <p>Total: ₱{order.total}</p>
+              <p style={styles.text}>
+                <b>Order:</b> #{order._id.slice(-6)}
+              </p>
+
+              <p style={styles.total}>₱{order.total}</p>
 
               <p style={styles.password}>
                 Password: {order.compartmentPassword || "—"}
@@ -93,7 +136,9 @@ function Orders() {
             </div>
 
             <div style={styles.badges}>
-              <span style={styles.badge}>{order.status}</span>
+              <span style={styles.badge}>
+                {order.status}
+              </span>
 
               <span
                 style={{
@@ -101,15 +146,17 @@ function Orders() {
                   background:
                     order.paymentStatus === "Approved"
                       ? "#22c55e"
-                      : "#ef4444",
+                      : order.paymentStatus === "Rejected"
+                      ? "#ef4444"
+                      : "#f59e0b",
                   color: "white",
                 }}
               >
-                {order.paymentStatus}
+                Payment: {order.paymentStatus}
               </span>
 
               <span style={styles.comp}>
-                Compartment #{order.compartment || "—"}
+                Comp #{order.compartment || "—"}
               </span>
             </div>
           </div>
@@ -121,49 +168,13 @@ function Orders() {
               order.status === "Delivered" ||
               order.paymentStatus !== "Approved"
             }
-            onChange={(e) => {
-              const newStatus = e.target.value;
-
-              if (order.status === "Delivered") {
-                alert("⚠️ This order is already delivered and cannot be changed.");
-                return;
-              }
-
-              if (
-                newStatus === "Delivered" &&
-                order.paymentStatus !== "Approved"
-              ) {
-                alert("❌ Cannot mark Delivered without approved payment");
-                return;
-              }
-
-              if (newStatus === "Delivered") {
-                const confirmAction = window.confirm(
-                  "⚠️ This action will deduct stock and cannot be undone. Continue?"
-                );
-
-                if (!confirmAction) return;
-              }
-
-              updateOrder(order._id, { status: newStatus });
-            }}
-            style={{
-              ...styles.select,
-              background:
-                order.status === "Delivered" ? "#e5e7eb" : "#fff",
-              cursor:
-                order.status === "Delivered" ? "not-allowed" : "pointer",
-            }}
+            onChange={(e) =>
+              updateOrder(order._id, { status: e.target.value })
+            }
+            style={styles.select}
           >
             {statusOptions.map((s) => (
-              <option
-                key={s}
-                value={s}
-                disabled={
-                  s === "Delivered" &&
-                  order.paymentStatus !== "Approved"
-                }
-              >
+              <option key={s} value={s}>
                 {s}
               </option>
             ))}
@@ -173,7 +184,10 @@ function Orders() {
           <select
             value={order.compartment || ""}
             onChange={(e) =>
-              handleAssignCompartment(order, e.target.value)
+              updateOrder(order._id, {
+                compartment: e.target.value,
+                compartmentPassword: order.compartmentPassword,
+              })
             }
             style={styles.select}
           >
@@ -197,16 +211,12 @@ function Orders() {
               </div>
             ))}
           </div>
-
         </div>
       ))}
 
-      {/* 🔥 IMAGE MODAL */}
+      {/* MODAL */}
       {selectedImage && (
-        <div
-          style={styles.modal}
-          onClick={() => setSelectedImage(null)}
-        >
+        <div style={styles.modal} onClick={() => setSelectedImage(null)}>
           <img src={selectedImage} style={styles.fullImage} />
         </div>
       )}
@@ -216,66 +226,99 @@ function Orders() {
 
 export default Orders;
 
-/* STYLES */
+/* ================= STYLES ================= */
 const styles = {
   page: {
-    padding: "30px",
+    padding: "20px",
     background: "#f3f4f6",
     minHeight: "100vh",
   },
 
   title: {
-    fontSize: "28px",
-    fontWeight: "700",
+    fontSize: "24px",
+    fontWeight: "800",
+    marginBottom: "10px",
+  },
+
+  search: {
+    width: "100%",
+    maxWidth: "400px",
+    padding: "10px",
+    borderRadius: "8px",
+    border: "1px solid #d1d5db",
+    marginBottom: "15px",
+  },
+
+  tabs: {
+    display: "flex",
+    gap: "10px",
+    marginBottom: "15px",
+    flexWrap: "wrap",
+  },
+
+  tab: {
+    padding: "8px 12px",
+    borderRadius: "8px",
+    border: "none",
+    cursor: "pointer",
+    fontWeight: "600",
   },
 
   card: {
     background: "#fff",
     padding: "15px",
     borderRadius: "12px",
-    marginBottom: "15px",
+    marginBottom: "12px",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
   },
 
   header: {
     display: "flex",
     justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: "10px",
+  },
+
+  text: {
+    fontSize: "13px",
+    margin: "2px 0",
+  },
+
+  total: {
+    fontSize: "15px",
+    fontWeight: "700",
   },
 
   badges: {
     display: "flex",
-    gap: "8px",
+    gap: "6px",
+    flexWrap: "wrap",
   },
 
   badge: {
-    background: "#fbbf24",
     padding: "5px 10px",
     borderRadius: "20px",
-    fontSize: "12px",
+    fontSize: "11px",
+    background: "#f59e0b",
+    color: "white",
+    fontWeight: "600",
   },
 
   comp: {
-    background: "#3b82f6",
+    background: "#6366f1",
     color: "white",
     padding: "5px 10px",
     borderRadius: "20px",
-    fontSize: "12px",
+    fontSize: "11px",
   },
 
   select: {
     marginTop: "8px",
     padding: "8px",
-    width: "200px",
-
-    /* 🔥 FIX VISIBILITY */
-    backgroundColor: "#fff",
-    color: "#111827",
-    border: "1px solid #d1d5db",
+    width: "100%",
+    maxWidth: "220px",
     borderRadius: "6px",
-  },
-
-  option: {
-    color: "#111827",
-    backgroundColor: "#ffffff",
+    border: "1px solid #d1d5db",
   },
 
   item: {
@@ -287,38 +330,41 @@ const styles = {
     borderRadius: "8px",
   },
 
-  password: {
-    fontSize: "12px",
-    background: "#111827",
-    color: "white",
-    padding: "4px 8px",
-    borderRadius: "10px",
-    marginTop: "5px",
-    display: "inline-block",
-  },
-
   img: {
     width: "40px",
     height: "40px",
     borderRadius: "6px",
   },
 
-  /* 🔥 SMALL CLICKABLE ID BOX */
   idBox: {
     width: "80px",
-    height: "40px",
+    height: "34px",
     borderRadius: "8px",
-    background: "#021150",
+    background: "#111827",
     color: "white",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     cursor: "pointer",
-    marginTop: "5px",
+    marginTop: "6px",
     fontSize: "12px",
   },
 
-  /* 🔥 MODAL */
+  noId: {
+    fontSize: "12px",
+    color: "gray",
+  },
+
+  password: {
+    fontSize: "12px",
+    background: "#111827",
+    color: "white",
+    padding: "4px 8px",
+    borderRadius: "8px",
+    marginTop: "5px",
+    display: "inline-block",
+  },
+
   modal: {
     position: "fixed",
     top: 0,
