@@ -21,22 +21,42 @@ export default function Sidebar({ open, setOpen }) {
     setOpen(false);
   };
 
-  // ✅ LOCK SCROLL WHEN SIDEBAR IS OPEN
+  // 🔥 FULL SCROLL LOCK FIX (mobile safe)
   useEffect(() => {
+    const root = document.getElementById("root");
+
     if (open) {
       document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+
+      if (root) {
+        root.style.overflow = "hidden";
+        root.style.height = "100vh";
+      }
     } else {
       document.body.style.overflow = "auto";
+      document.documentElement.style.overflow = "auto";
+
+      if (root) {
+        root.style.overflow = "auto";
+        root.style.height = "auto";
+      }
     }
 
     return () => {
       document.body.style.overflow = "auto";
+      document.documentElement.style.overflow = "auto";
+
+      if (root) {
+        root.style.overflow = "auto";
+        root.style.height = "auto";
+      }
     };
   }, [open]);
 
   return (
     <>
-      {/* ✅ OVERLAY */}
+      {/* OVERLAY */}
       {open && (
         <div
           onClick={() => setOpen(false)}
@@ -44,7 +64,7 @@ export default function Sidebar({ open, setOpen }) {
         />
       )}
 
-      {/* ✅ SIDEBAR */}
+      {/* SIDEBAR */}
       <div
         style={{
           ...styles.sidebar,
@@ -62,74 +82,32 @@ export default function Sidebar({ open, setOpen }) {
 
         <h2 style={styles.title}>Admin</h2>
 
-        <Link
-          to="/admin"
-          onClick={handleNavClick}
-          style={{
-            ...styles.item,
-            ...(isActive("/admin") ? styles.active : {}),
-          }}
-        >
+        <Link to="/admin" onClick={handleNavClick} style={{ ...styles.item, ...(isActive("/admin") ? styles.active : {}) }}>
           <LayoutDashboard size={18} />
           Dashboard
         </Link>
 
-        <Link
-          to="/admin/orders"
-          onClick={handleNavClick}
-          style={{
-            ...styles.item,
-            ...(isActive("/admin/orders") ? styles.active : {}),
-          }}
-        >
+        <Link to="/admin/orders" onClick={handleNavClick} style={{ ...styles.item, ...(isActive("/admin/orders") ? styles.active : {}) }}>
           <ShoppingCart size={18} />
           Orders
         </Link>
 
-        <Link
-          to="/admin/products"
-          onClick={handleNavClick}
-          style={{
-            ...styles.item,
-            ...(isActive("/admin/products") ? styles.active : {}),
-          }}
-        >
+        <Link to="/admin/products" onClick={handleNavClick} style={{ ...styles.item, ...(isActive("/admin/products") ? styles.active : {}) }}>
           <Package size={18} />
           Products
         </Link>
 
-        <Link
-          to="/admin/concerns"
-          onClick={handleNavClick}
-          style={{
-            ...styles.item,
-            ...(isActive("/admin/concerns") ? styles.active : {}),
-          }}
-        >
+        <Link to="/admin/concerns" onClick={handleNavClick} style={{ ...styles.item, ...(isActive("/admin/concerns") ? styles.active : {}) }}>
           <MessageSquare size={18} />
           Concerns
         </Link>
 
-        <Link
-          to="/admin/payments"
-          onClick={handleNavClick}
-          style={{
-            ...styles.item,
-            ...(isActive("/admin/payments") ? styles.active : {}),
-          }}
-        >
+        <Link to="/admin/payments" onClick={handleNavClick} style={{ ...styles.item, ...(isActive("/admin/payments") ? styles.active : {}) }}>
           <CreditCard size={18} />
           Payments
         </Link>
 
-        <Link
-          to="/admin/sales-report"
-          onClick={handleNavClick}
-          style={{
-            ...styles.item,
-            ...(isActive("/admin/sales-report") ? styles.active : {}),
-          }}
-        >
+        <Link to="/admin/sales-report" onClick={handleNavClick} style={{ ...styles.item, ...(isActive("/admin/sales-report") ? styles.active : {}) }}>
           <BarChart3 size={18} />
           Sales Report
         </Link>
@@ -150,7 +128,7 @@ const styles = {
   },
 
   sidebar: {
-    width: `${SIDEBAR_WIDTH}px`,
+    width: "150px",
     height: "100vh",
     background: "#6D8196",
     padding: "20px",
@@ -182,7 +160,6 @@ const styles = {
     color: "white",
     textDecoration: "none",
     background: "rgba(255,255,255,0.08)",
-    transition: "all 0.2s ease",
   },
 
   active: {
