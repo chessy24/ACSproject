@@ -6,10 +6,12 @@ export default function Orders() {
     const [orders, setOrders] = useState([]);
     const [selectedProof, setSelectedProof] = useState(null);
     const [activeTab, setActiveTab] = useState("All");
+
     const [isPaying, setIsPaying] = useState(() => {
-    const saved = localStorage.getItem("payingOrders");
-    return saved ? JSON.parse(saved) : {};
-});
+        const saved = localStorage.getItem("payingOrders");
+        return saved ? JSON.parse(saved) : {};
+    });
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -40,31 +42,32 @@ export default function Orders() {
        CANCEL ORDER
     ========================= */
     const handleCancel = async (orderId) => {
-    const confirmCancel = window.confirm(
-        "⚠️ Are you sure you want to cancel this order?"
-    );
+        const confirmCancel = window.confirm(
+            "⚠️ Are you sure you want to cancel this order?"
+        );
 
-    if (!confirmCancel) return;
+        if (!confirmCancel) return;
 
-    try {
-        const res = await fetch(`${backendUrl}/api/orders/${orderId}/cancel`, {
-            method: "PUT",
-        });
+        try {
+            const res = await fetch(`${backendUrl}/api/orders/${orderId}/cancel`, {
+                method: "PUT",
+            });
 
-        const data = await res.json();
+            const data = await res.json();
 
-        if (!res.ok) {
-            alert(data.message || "Cancel failed");
-            return;
+            if (!res.ok) {
+                alert(data.message || "Cancel failed");
+                return;
+            }
+
+            alert("Order cancelled successfully");
+            fetchOrders();
+        } catch (err) {
+            console.log(err);
+            alert("Error cancelling order");
         }
+    };
 
-        alert("Order cancelled successfully");
-        fetchOrders();
-    } catch (err) {
-        console.log(err);
-        alert("Error cancelling order");
-    }
-};
     /* =========================
        PAY CONFIRMATION
     ========================= */
@@ -75,7 +78,6 @@ export default function Orders() {
 
         if (!confirmPay) return;
 
-        // immediately hide cancel button
         setIsPaying((prev) => ({
             ...prev,
             [orderId]: true,
@@ -83,6 +85,7 @@ export default function Orders() {
 
         navigate(`/gcash-payment/${orderId}`);
     };
+
     /* =========================
        FILTER
     ========================= */
@@ -149,16 +152,39 @@ export default function Orders() {
                                                 order.status === "Pending"
                                                     ? "#fbbf24"
                                                     : order.status === "Delivered"
-                                                        ? "#22c55e"
-                                                        : order.status === "Cancelled"
-                                                            ? "#ef4444"
-                                                            : "#60a5fa",
+                                                    ? "#22c55e"
+                                                    : order.status === "Cancelled"
+                                                    ? "#ef4444"
+                                                    : "#60a5fa",
                                         }}
                                     >
                                         {order.status}
                                     </span>
                                 </div>
                             </div>
+
+                            {/* PAYMENT STATUS (NEW) */}
+                            {order.payment && (
+                                <div style={{ marginBottom: "10px" }}>
+                                    <span
+                                        style={{
+                                            padding: "5px 10px",
+                                            borderRadius: "20px",
+                                            fontSize: "12px",
+                                            fontWeight: "bold",
+                                            color: "#fff",
+                                            background:
+                                                order.payment.status === "Approved"
+                                                    ? "#22c55e"
+                                                    : order.payment.status === "Rejected"
+                                                    ? "#ef4444"
+                                                    : "#fbbf24",
+                                        }}
+                                    >
+                                        Payment: {order.payment.status}
+                                    </span>
+                                </div>
+                            )}
 
                             {/* ITEMS */}
                             <div style={styles.items}>
@@ -198,18 +224,20 @@ export default function Orders() {
                                         </button>
                                     )}
 
-                                {/* CANCEL BUTTON */}
-                                {order.status === "Pending" && !isPaying[order._id] && (
-                                    <button
-                                        onClick={() => handleCancel(order._id)}
-                                        style={styles.cancelBtn}
-                                    >
-                                        Cancel Order ❌
-                                    </button>
-                                )}
+                                {/* CANCEL BUTTON (UPDATED LOGIC) */}
+                                {order.status === "Pending" &&
+                                    order.payment?.status !== "Approved" &&
+                                    !isPaying[order._id] && (
+                                        <button
+                                            onClick={() => handleCancel(order._id)}
+                                            style={styles.cancelBtn}
+                                        >
+                                            Cancel Order ❌
+                                        </button>
+                                    )}
                             </div>
 
-                            {/* PAYMENT */}
+                            {/* PAYMENT PROOF */}
                             {order.payment && (
                                 <div style={styles.paymentBox}>
                                     <button
@@ -263,13 +291,11 @@ const styles = {
         background: "#f3f4f6",
         minHeight: "100vh",
     },
-
     title: {
         fontSize: "28px",
         fontWeight: "700",
         marginBottom: "20px",
     },
-
     tabs: {
         display: "flex",
         gap: "10px",
@@ -277,53 +303,44 @@ const styles = {
         borderBottom: "1px solid #ddd",
         overflowX: "auto",
     },
-
     tabBtn: {
         padding: "10px 15px",
         background: "transparent",
         border: "none",
         cursor: "pointer",
         fontWeight: "600",
-        display: "flex",
-        gap: "5px",
     },
-
     badge: {
         background: "#e5e7eb",
         borderRadius: "50%",
         padding: "3px 8px",
         fontSize: "12px",
+        marginLeft: "5px",
     },
-
     empty: {
         background: "#fff",
         padding: "20px",
         borderRadius: "10px",
         textAlign: "center",
     },
-
     container: {
         display: "flex",
         flexDirection: "column",
         gap: "15px",
     },
-
     card: {
         background: "#fff",
         borderRadius: "12px",
         padding: "15px",
         boxShadow: "0 5px 15px rgba(0,0,0,0.08)",
     },
-
     header: {
         display: "flex",
         justifyContent: "space-between",
         marginBottom: "10px",
     },
-
     orderId: { fontWeight: "600", margin: 0 },
     date: { fontSize: "12px", color: "#6b7280", margin: 0 },
-
     status: {
         padding: "5px 10px",
         borderRadius: "20px",
@@ -331,9 +348,7 @@ const styles = {
         fontSize: "12px",
         fontWeight: "bold",
     },
-
     items: { display: "flex", flexDirection: "column", gap: "10px" },
-
     item: {
         display: "flex",
         gap: "10px",
@@ -341,17 +356,14 @@ const styles = {
         background: "#f9fafb",
         borderRadius: "10px",
     },
-
     img: {
         width: "50px",
         height: "50px",
         objectFit: "cover",
         borderRadius: "8px",
     },
-
     name: { margin: 0, fontWeight: "600" },
     price: { margin: 0, color: "#22c55e", fontWeight: "bold" },
-
     footer: {
         marginTop: "10px",
         textAlign: "right",
@@ -362,7 +374,6 @@ const styles = {
         gap: "8px",
         alignItems: "flex-end",
     },
-
     gcashBtn: {
         padding: "10px",
         borderRadius: "8px",
@@ -371,7 +382,6 @@ const styles = {
         border: "none",
         cursor: "pointer",
     },
-
     cancelBtn: {
         padding: "10px",
         borderRadius: "8px",
@@ -380,14 +390,12 @@ const styles = {
         border: "none",
         cursor: "pointer",
     },
-
     paymentBox: {
         marginTop: "10px",
         padding: "10px",
         background: "#f9fafb",
         borderRadius: "10px",
     },
-
     viewBtn: {
         padding: "8px 12px",
         borderRadius: "8px",
@@ -396,7 +404,6 @@ const styles = {
         border: "none",
         cursor: "pointer",
     },
-
     modalOverlay: {
         position: "fixed",
         top: 0,
@@ -408,19 +415,16 @@ const styles = {
         justifyContent: "center",
         alignItems: "center",
     },
-
     modal: {
         background: "#fff",
         padding: "15px",
         borderRadius: "10px",
     },
-
     modalImg: {
         width: "100%",
         maxHeight: "400px",
         objectFit: "contain",
     },
-
     closeBtn: {
         marginTop: "10px",
         padding: "8px",
