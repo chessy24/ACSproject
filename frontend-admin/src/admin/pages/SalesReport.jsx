@@ -31,9 +31,9 @@ export default function SalesReport() {
 
   const chartData = report
     ? Object.entries(report.dailySales).map(([date, value]) => ({
-        date,
-        revenue: value,
-      }))
+      date,
+      revenue: value,
+    }))
     : [];
 
   const downloadPDF = async () => {
@@ -66,7 +66,9 @@ export default function SalesReport() {
 
   return (
     <div style={styles.page}>
-      <h1 style={styles.title}>📊 Sales Report</h1>
+      <h1 style={{ ...styles.title, color: "#000" }}>
+        📊 Sales Report
+      </h1>
 
       {/* FILTER */}
       <div style={styles.filterBox}>
