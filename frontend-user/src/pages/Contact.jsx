@@ -12,7 +12,6 @@ function Contact() {
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // SCREEN DETECT
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -22,12 +21,10 @@ function Contact() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // INPUT HANDLER
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // SUBMIT
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -55,7 +52,6 @@ function Contact() {
         email: "",
         message: "",
       });
-
     } catch (err) {
       console.log(err);
       alert("Server error");
@@ -90,14 +86,13 @@ function Contact() {
           gap: isMobile ? "25px" : "40px",
         }}
       >
-
-        {/* LEFT INFO */}
+        {/* LEFT */}
         <div style={styles.left}>
-          <div style={styles.item}><span style={styles.icon}>📍</span><p>Boni Ave, Mandaluyong City</p></div>
-          <div style={styles.item}><span style={styles.icon}>📧</span><p>aces.boni@rtu.edu.ph</p></div>
-          <div style={styles.item}><span style={styles.icon}>📞</span><p>(02) 8534 8267</p></div>
-          <div style={styles.item}><span style={styles.icon}>🕒</span><p>Mon-Sat: 8AM - 5PM</p></div>
-          <div style={styles.item}><span style={styles.icon}>🌐</span><p>rtu.edu.ph</p></div>
+          <div style={styles.item}>📍 <p>Boni Ave, Mandaluyong City</p></div>
+          <div style={styles.item}>📧 <p>aces.boni@rtu.edu.ph</p></div>
+          <div style={styles.item}>📞 <p>(02) 8534 8267</p></div>
+          <div style={styles.item}>🕒 <p>Mon-Sat: 8AM - 5PM</p></div>
+          <div style={styles.item}>🌐 <p>rtu.edu.ph</p></div>
         </div>
 
         {/* FORM */}
@@ -130,7 +125,6 @@ function Contact() {
             {loading ? "Sending..." : "Send Message"}
           </button>
         </form>
-
       </div>
     </motion.div>
   );
@@ -158,6 +152,7 @@ const styles = {
     display: "flex",
     width: "100%",
     maxWidth: "1000px",
+    alignItems: "flex-start",
   },
 
   left: {
@@ -173,6 +168,8 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     gap: "15px",
+    width: "100%",
+    boxSizing: "border-box",
   },
 
   input: {
@@ -183,18 +180,20 @@ const styles = {
     backgroundColor: "#fff",
     color: "#000",
     outline: "none",
+    boxSizing: "border-box",
   },
 
   textarea: {
     width: "100%",
     padding: "12px",
-    height: "120px",
+    height: "140px",
     border: "1px solid #000",
     borderRadius: "6px",
     backgroundColor: "#fff",
     color: "#000",
     outline: "none",
     resize: "none",
+    boxSizing: "border-box",
   },
 
   button: {
@@ -205,15 +204,12 @@ const styles = {
     borderRadius: "6px",
     cursor: "pointer",
     fontWeight: "600",
+    width: "100%",
   },
 
   item: {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-  },
-
-  icon: {
-    fontSize: "20px",
   },
 };
