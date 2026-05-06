@@ -1,5 +1,5 @@
-import { useLocation } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
+import { useEffect } from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -17,105 +17,138 @@ export default function Sidebar({ open, setOpen }) {
 
   const isActive = (path) => location.pathname === path;
 
-  // ✅ HANDLE AUTO CLOSE
   const handleNavClick = () => {
     setOpen(false);
   };
 
+  // ✅ LOCK SCROLL WHEN SIDEBAR IS OPEN
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [open]);
+
   return (
-    <div
-      style={{
-        ...styles.sidebar,
-        transform: open ? "translateX(0)" : "translateX(-100%)",
-      }}
-    >
-      {/* TOGGLE */}
-      <div onClick={() => setOpen(!open)} style={styles.toggleTab}>
-        {open ? "❮" : "❯"}
+    <>
+      {/* ✅ OVERLAY */}
+      {open && (
+        <div
+          onClick={() => setOpen(false)}
+          style={styles.overlay}
+        />
+      )}
+
+      {/* ✅ SIDEBAR */}
+      <div
+        style={{
+          ...styles.sidebar,
+          transform: open ? "translateX(0)" : "translateX(-100%)",
+        }}
+      >
+        {/* TOGGLE */}
+        <div onClick={() => setOpen(!open)} style={styles.toggleTab}>
+          {open ? "❮" : "❯"}
+        </div>
+
+        <div style={styles.logoContainer}>
+          <img src={png} alt="image" style={styles.image} />
+        </div>
+
+        <h2 style={styles.title}>Admin</h2>
+
+        <Link
+          to="/admin"
+          onClick={handleNavClick}
+          style={{
+            ...styles.item,
+            ...(isActive("/admin") ? styles.active : {}),
+          }}
+        >
+          <LayoutDashboard size={18} />
+          Dashboard
+        </Link>
+
+        <Link
+          to="/admin/orders"
+          onClick={handleNavClick}
+          style={{
+            ...styles.item,
+            ...(isActive("/admin/orders") ? styles.active : {}),
+          }}
+        >
+          <ShoppingCart size={18} />
+          Orders
+        </Link>
+
+        <Link
+          to="/admin/products"
+          onClick={handleNavClick}
+          style={{
+            ...styles.item,
+            ...(isActive("/admin/products") ? styles.active : {}),
+          }}
+        >
+          <Package size={18} />
+          Products
+        </Link>
+
+        <Link
+          to="/admin/concerns"
+          onClick={handleNavClick}
+          style={{
+            ...styles.item,
+            ...(isActive("/admin/concerns") ? styles.active : {}),
+          }}
+        >
+          <MessageSquare size={18} />
+          Concerns
+        </Link>
+
+        <Link
+          to="/admin/payments"
+          onClick={handleNavClick}
+          style={{
+            ...styles.item,
+            ...(isActive("/admin/payments") ? styles.active : {}),
+          }}
+        >
+          <CreditCard size={18} />
+          Payments
+        </Link>
+
+        <Link
+          to="/admin/sales-report"
+          onClick={handleNavClick}
+          style={{
+            ...styles.item,
+            ...(isActive("/admin/sales-report") ? styles.active : {}),
+          }}
+        >
+          <BarChart3 size={18} />
+          Sales Report
+        </Link>
       </div>
-
-      <div style={styles.logoContainer}>
-        <img src={png} alt="image" style={styles.image} />
-      </div>
-
-      <h2 style={styles.title}>Admin</h2>
-
-      <Link
-        to="/admin"
-        onClick={handleNavClick}
-        style={{
-          ...styles.item,
-          ...(isActive("/admin") ? styles.active : {}),
-        }}
-      >
-        <LayoutDashboard size={18} />
-        Dashboard
-      </Link>
-
-      <Link
-        to="/admin/orders"
-        onClick={handleNavClick}
-        style={{
-          ...styles.item,
-          ...(isActive("/admin/orders") ? styles.active : {}),
-        }}
-      >
-        <ShoppingCart size={18} />
-        Orders
-      </Link>
-
-      <Link
-        to="/admin/products"
-        onClick={handleNavClick}
-        style={{
-          ...styles.item,
-          ...(isActive("/admin/products") ? styles.active : {}),
-        }}
-      >
-        <Package size={18} />
-        Products
-      </Link>
-
-      <Link
-        to="/admin/concerns"
-        onClick={handleNavClick}
-        style={{
-          ...styles.item,
-          ...(isActive("/admin/concerns") ? styles.active : {}),
-        }}
-      >
-        <MessageSquare size={18} />
-        Concerns
-      </Link>
-
-      <Link
-        to="/admin/payments"
-        onClick={handleNavClick}
-        style={{
-          ...styles.item,
-          ...(isActive("/admin/payments") ? styles.active : {}),
-        }}
-      >
-        <CreditCard size={18} />
-        Payments
-      </Link>
-
-      <Link
-        to="/admin/sales-report"
-        onClick={handleNavClick}
-        style={{
-          ...styles.item,
-          ...(isActive("/admin/sales-report") ? styles.active : {}),
-        }}
-      >
-        <BarChart3 size={18} />
-        Sales Report
-      </Link>
-    </div>
+    </>
   );
 }
 
 const styles = {
+  overlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100vh",
+    background: "rgba(0,0,0,0.4)",
+    zIndex: 999,
+  },
+
   sidebar: {
     width: `${SIDEBAR_WIDTH}px`,
     height: "100vh",
@@ -128,7 +161,7 @@ const styles = {
     left: 0,
     top: 0,
     transition: "transform 0.3s ease",
-    boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
+    boxShadow: "2px 0 15px rgba(0,0,0,0.2)",
     zIndex: 1000,
   },
 
@@ -137,6 +170,7 @@ const styles = {
     marginBottom: "10px",
     fontSize: "18px",
     fontWeight: "600",
+    textAlign: "center",
   },
 
   item: {
@@ -148,6 +182,7 @@ const styles = {
     color: "white",
     textDecoration: "none",
     background: "rgba(255,255,255,0.08)",
+    transition: "all 0.2s ease",
   },
 
   active: {
@@ -162,7 +197,7 @@ const styles = {
     top: "20px",
     width: "18px",
     height: "38px",
-    background: "#555353",
+    background: "#444",
     borderRadius: "0 6px 6px 0",
     display: "flex",
     alignItems: "center",
@@ -171,6 +206,12 @@ const styles = {
     fontSize: "12px",
     color: "white",
     zIndex: 1100,
+  },
+
+  logoContainer: {
+    display: "flex",
+    justifyContent: "center",
+    marginBottom: "10px",
   },
 
   image: {

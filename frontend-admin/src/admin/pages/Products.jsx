@@ -344,7 +344,7 @@ function AdminProducts() {
         </form>
 
         {/* PRODUCT LIST */}
-        <h2 style={styles.subtitle}>
+        <h2 style={{ ...styles.subtitle, color: "black" }}>
           Products
         </h2>
 
@@ -601,11 +601,11 @@ const styles = {
   },
 
   cardBody: {
-  marginTop: "10px",
-  display: "flex",
-  flexDirection: "column",
-  gap: "6px"
-},
+    marginTop: "10px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "6px"
+  },
 
   cardTitle: {
     fontSize: "16px",
