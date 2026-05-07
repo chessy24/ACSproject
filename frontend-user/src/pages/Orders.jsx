@@ -239,7 +239,7 @@ export default function Orders() {
                                             color: "#fff",
 
                                             background:
-                                                order.payment.status ===
+                                                order.paymentStatus ===
                                                     "Approved"
                                                     ? "#22c55e"
                                                     : order.payment
@@ -250,7 +250,7 @@ export default function Orders() {
                                         }}
                                     >
                                         Payment:{" "}
-                                        {order.payment.status}
+                                        {order.paymentStatus}
                                     </span>
                                 </div>
                             )}
@@ -288,7 +288,7 @@ export default function Orders() {
                                 {/* PAY BUTTON */}
                                 {order.status === "Pending" &&
                                     (!order.payment ||
-                                        order.payment.status ===
+                                        order.paymentStatus ===
                                         "Rejected") && (
                                         <button
                                             onClick={() =>
@@ -296,7 +296,7 @@ export default function Orders() {
                                             }
                                             style={styles.gcashBtn}
                                         >
-                                            {order.payment?.status ===
+                                            {order.paymentStatus === "Rejected" ===
                                                 "Rejected"
                                                 ? "Retry Payment 💳"
                                                 : "Pay with GCash 💳"}
@@ -346,15 +346,21 @@ export default function Orders() {
                                             </button>
 
                                             {/* OPTIONAL STATUS DISPLAY */}
-                                            {(order.claimStatus || "Pending") === "Rejected" && (
+                                            {order.claimStatus === "Rejected" && (
                                                 <p style={{ color: "red", marginTop: "5px" }}>
                                                     Claim Rejected ❌ (Upload again)
                                                 </p>
                                             )}
 
-                                            {(order.claimStatus || "Pending") === "Pending" && (
+                                            {order.claimStatus === "Pending" && (
                                                 <p style={{ color: "#f59e0b", marginTop: "5px" }}>
                                                     Claim Under Review ⏳
+                                                </p>
+                                            )}
+
+                                            {order.claimStatus === "Approved" && (
+                                                <p style={{ color: "#22c55e", marginTop: "5px" }}>
+                                                    Claim Approved ✅
                                                 </p>
                                             )}
                                         </div>
