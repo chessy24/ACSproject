@@ -2,37 +2,72 @@ import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema(
   {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    items: [
-  {
-    productId: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Product",
-      required: true,
+      ref: "User",
     },
-    name: String,
-    price: Number,
-    image: String,
-    quantity: {
-      type: Number,
-      default: 1,
-    },
-  },
-],
+
+    items: [
+      {
+        productId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+          required: true,
+        },
+
+        name: String,
+
+        price: Number,
+
+        image: String,
+
+        quantity: {
+          type: Number,
+          default: 1,
+        },
+      },
+    ],
+
     total: Number,
+
     status: {
       type: String,
       default: "Pending",
     },
+
     compartment: {
-  type: String,
-  default: ""
-},
-compartmentPassword: {
-  type: String, 
-  default: ""
-},
+      type: String,
+      default: "",
+    },
+
+    compartmentPassword: {
+      type: String,
+      default: "",
+    },
+
+    /* =========================
+       CLAIM SYSTEM
+    ========================= */
+
+    // User uploaded proof/selfie/photo
+    claimProof: {
+      type: String,
+      default: "",
+    },
+
+    // Claim review status
+    claimStatus: {
+      type: String,
+      enum: ["None", "Pending", "Approved", "Rejected"],
+      default: "None",
+    },
+
+    // Timestamp when user submitted proof
+    claimSubmittedAt: {
+      type: Date,
+    },
   },
+
   { timestamps: true }
 );
 

@@ -5,6 +5,7 @@ import Product from "../models/Product.js";
 import Payment from "../models/Payment.js";
 import { getUserOrdersWithPayments } from "../controller/orderController.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
+import upload from "../middleware/uploadClaim.js";
 
 const router = express.Router();
 
@@ -198,6 +199,60 @@ router.put("/:id/cancel", async (req, res) => {
 
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+});
+
+router.put("/:id/claim", upload.single("image"), async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No image uploaded" });
+    }
+
+    order.claimProof = req.file.path; // Cloudinary URL
+    order.claimStatus = "Pending";
+    order.claimSubmittedAt = new Date();
+
+    await order.save();
+
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({
+      message: "Claim upload failed",
+      error: err.message,
+    });
+  }
+});
+
+router.put("/:id/claim-status", async (req, res) => {
+  try {
+    const { claimStatus } = req.body;
+
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (!["Approved", "Rejected"].includes(claimStatus)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    order.claimStatus = claimStatus;
+
+    await order.save();
+
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({
+      message: "Update claim failed",
+      error: err.message,
+    });
   }
 });
 
