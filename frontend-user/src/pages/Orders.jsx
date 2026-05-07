@@ -214,12 +214,12 @@ export default function Orders() {
                                                 order.status === "Pending"
                                                     ? "#fbbf24"
                                                     : order.status ===
-                                                      "Delivered"
-                                                    ? "#22c55e"
-                                                    : order.status ===
-                                                      "Cancelled"
-                                                    ? "#ef4444"
-                                                    : "#60a5fa",
+                                                        "Delivered"
+                                                        ? "#22c55e"
+                                                        : order.status ===
+                                                            "Cancelled"
+                                                            ? "#ef4444"
+                                                            : "#60a5fa",
                                         }}
                                     >
                                         {order.status}
@@ -240,13 +240,13 @@ export default function Orders() {
 
                                             background:
                                                 order.payment.status ===
-                                                "Approved"
+                                                    "Approved"
                                                     ? "#22c55e"
                                                     : order.payment
-                                                          .status ===
-                                                      "Rejected"
-                                                    ? "#ef4444"
-                                                    : "#fbbf24",
+                                                        .status ===
+                                                        "Rejected"
+                                                        ? "#ef4444"
+                                                        : "#fbbf24",
                                         }}
                                     >
                                         Payment:{" "}
@@ -263,8 +263,8 @@ export default function Orders() {
                                             src={item.image}
                                             style={styles.img}
                                             onError={(e) =>
-                                                (e.target.src =
-                                                    "/placeholder.png")
+                                            (e.target.src =
+                                                "/placeholder.png")
                                             }
                                         />
 
@@ -289,7 +289,7 @@ export default function Orders() {
                                 {order.status === "Pending" &&
                                     (!order.payment ||
                                         order.payment.status ===
-                                            "Rejected") && (
+                                        "Rejected") && (
                                         <button
                                             onClick={() =>
                                                 handlePay(order._id)
@@ -297,7 +297,7 @@ export default function Orders() {
                                             style={styles.gcashBtn}
                                         >
                                             {order.payment?.status ===
-                                            "Rejected"
+                                                "Rejected"
                                                 ? "Retry Payment 💳"
                                                 : "Pay with GCash 💳"}
                                         </button>
@@ -306,7 +306,7 @@ export default function Orders() {
                                 {/* CANCEL BUTTON */}
                                 {order.status === "Pending" &&
                                     order.payment?.status !==
-                                        "Approved" &&
+                                    "Approved" &&
                                     !isPaying[order._id] && (
                                         <button
                                             onClick={() =>
@@ -320,38 +320,45 @@ export default function Orders() {
                                         </button>
                                     )}
 
-                                {/* CLAIM PRODUCT */}
-                                {order.status === "Delivered" && (
-                                    <div style={styles.claimBox}>
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            capture="environment"
-                                            style={
-                                                styles.claimInput
-                                            }
-                                            onChange={(e) =>
-                                                setClaimImage({
-                                                    ...claimImage,
-                                                    [order._id]:
-                                                        e.target
-                                                            .files[0],
-                                                })
-                                            }
-                                        />
 
-                                        <button
-                                            style={styles.claimBtn}
-                                            onClick={() =>
-                                                handleClaim(
-                                                    order._id
-                                                )
-                                            }
-                                        >
-                                            Claim Product 📸
-                                        </button>
-                                    </div>
-                                )}
+                                {/* CLAIM PRODUCT */}
+                                {order.status === "Delivered" &&
+                                    order.claimStatus !== "Approved" && (
+                                        <div style={styles.claimBox}>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                capture="environment"
+                                                style={styles.claimInput}
+                                                onChange={(e) =>
+                                                    setClaimImage({
+                                                        ...claimImage,
+                                                        [order._id]: e.target.files[0],
+                                                    })
+                                                }
+                                            />
+
+                                            <button
+                                                style={styles.claimBtn}
+                                                onClick={() => handleClaim(order._id)}
+                                            >
+                                                Claim Product 📸
+                                            </button>
+
+                                            {/* OPTIONAL STATUS DISPLAY */}
+                                            {(order.claimStatus || "Pending") === "Rejected" && (
+                                                <p style={{ color: "red", marginTop: "5px" }}>
+                                                    Claim Rejected ❌ (Upload again)
+                                                </p>
+                                            )}
+
+                                            {(order.claimStatus || "Pending") === "Pending" && (
+                                                <p style={{ color: "#f59e0b", marginTop: "5px" }}>
+                                                    Claim Under Review ⏳
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
                             </div>
 
                             {/* PAYMENT PROOF */}
