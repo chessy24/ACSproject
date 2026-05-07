@@ -46,9 +46,9 @@ function Orders() {
         prev.map((o) =>
           o._id === id
             ? {
-                ...o,
-                ...data,
-              }
+              ...o,
+              ...data,
+            }
             : o
         )
       );
@@ -197,10 +197,10 @@ function Orders() {
       {filteredOrders.map((order) => (
         <div key={order._id} style={styles.card}>
           <div style={styles.header}>
-            
+
             {/* LEFT */}
             <div style={styles.left}>
-              
+
               <div style={styles.field}>
                 <span style={styles.label}>Name</span>
 
@@ -301,10 +301,8 @@ function Orders() {
 
                   {/* CLAIM TIMESTAMP */}
                   <p style={styles.claimTime}>
-                    {order.claimSubmittedAt 
-                      ? new Date(
-                          order.claimedAt
-                        ).toLocaleString()
+                    {order.claimSubmittedAt
+                      ? new Date(order.claimSubmittedAt).toLocaleString()
                       : ""}
                   </p>
 
@@ -342,7 +340,7 @@ function Orders() {
 
             {/* RIGHT */}
             <div style={styles.statusGroup}>
-              
+
               {/* ORDER STATUS */}
               <div style={styles.statusBlock}>
                 <p style={styles.smallLabel}>
@@ -401,12 +399,12 @@ function Orders() {
 
                     background:
                       order.paymentStatus ===
-                      "Approved"
+                        "Approved"
                         ? "#22c55e"
                         : order.paymentStatus ===
                           "Rejected"
-                        ? "#ef4444"
-                        : "#f59e0b",
+                          ? "#ef4444"
+                          : "#f59e0b",
                   }}
                 >
                   {order.paymentStatus}
