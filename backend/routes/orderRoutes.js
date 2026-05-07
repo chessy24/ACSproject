@@ -214,7 +214,10 @@ router.put("/:id/claim", upload.single("image"), async (req, res) => {
       return res.status(400).json({ message: "No image uploaded" });
     }
 
-    order.claimProof = req.file.path; // Cloudinary URL
+    order.claimProof =
+      req.file?.path ||
+      req.file?.secure_url ||
+      req.file?.url;
     order.claimStatus = "Pending";
     order.claimSubmittedAt = new Date();
 
