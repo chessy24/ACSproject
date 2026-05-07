@@ -68,7 +68,17 @@ export const getUserOrdersWithPayments = async (req, res) => {
 
       return {
         ...order.toObject(),
+
+        // ✅ existing
         payment: payment || null,
+
+        // 🔥 ADD THIS (IMPORTANT)
+        paymentStatus: payment ? payment.status : "Pending",
+
+        // ✅ CLAIM FIELDS (THIS IS WHAT YOU'RE MISSING)
+        claimStatus: order.claimStatus || null,
+        claimProof: order.claimProof || null,
+        claimSubmittedAt: order.claimSubmittedAt || null,
       };
     });
 
