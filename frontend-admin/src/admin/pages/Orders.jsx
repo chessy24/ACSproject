@@ -94,7 +94,6 @@ function Orders() {
     "Pending",
     "Shipped",
     "Delivered",
-    "Cancelled",
   ];
 
   const compartmentOptions = [
