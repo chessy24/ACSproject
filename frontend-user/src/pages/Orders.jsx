@@ -321,28 +321,12 @@ export default function Orders() {
 
 
                                 {/* CLAIM PRODUCT */}
-                                {order.status === "Delivered" && order.claimStatus !== "Approved" && (
+                                {order.status === "Delivered" && (
                                     <div style={styles.claimBox}>
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            capture="environment"
-                                            style={styles.claimInput}
-                                            onChange={(e) =>
-                                                setClaimImage({
-                                                    ...claimImage,
-                                                    [order._id]: e.target.files[0],
-                                                })
-                                            }
-                                        />
 
-                                        <button
-                                            style={styles.claimBtn}
-                                            onClick={() => handleClaim(order._id)}
-                                        >
-                                            Claim Product 📸
-                                        </button>
-
+                                        {/* =========================
+            CLAIM STATUS (ALWAYS SHOWN)
+        ========================= */}
                                         {order.claimStatus === "Rejected" && (
                                             <p style={{ color: "red", marginTop: "5px" }}>
                                                 Claim Rejected ❌ (Upload again)
@@ -359,6 +343,33 @@ export default function Orders() {
                                             <p style={{ color: "#22c55e", marginTop: "5px" }}>
                                                 Claim Approved ✅
                                             </p>
+                                        )}
+
+                                        {/* =========================
+            UPLOAD SECTION (ONLY HIDDEN WHEN APPROVED)
+        ========================= */}
+                                        {order.claimStatus !== "Approved" && (
+                                            <>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    capture="environment"
+                                                    style={styles.claimInput}
+                                                    onChange={(e) =>
+                                                        setClaimImage({
+                                                            ...claimImage,
+                                                            [order._id]: e.target.files[0],
+                                                        })
+                                                    }
+                                                />
+
+                                                <button
+                                                    style={styles.claimBtn}
+                                                    onClick={() => handleClaim(order._id)}
+                                                >
+                                                    Claim Product 📸
+                                                </button>
+                                            </>
                                         )}
                                     </div>
                                 )}
