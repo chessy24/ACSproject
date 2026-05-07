@@ -321,7 +321,7 @@ export default function Orders() {
 
 
                                 {/* CLAIM PRODUCT */}
-                                {order.status === "Delivered" && order.claim?.status !== "Approved" && (
+                                {order.status === "Delivered" && order.claimStatus !== "Approved" && (
                                     <div style={styles.claimBox}>
                                         <input
                                             type="file"
@@ -343,19 +343,19 @@ export default function Orders() {
                                             Claim Product 📸
                                         </button>
 
-                                        {order.claim?.status === "Rejected" && (
+                                        {order.claimStatus === "Rejected" && (
                                             <p style={{ color: "red", marginTop: "5px" }}>
                                                 Claim Rejected ❌ (Upload again)
                                             </p>
                                         )}
 
-                                        {order.claim?.status === "Pending" && (
+                                        {order.claimStatus === "Pending" && (
                                             <p style={{ color: "#f59e0b", marginTop: "5px" }}>
                                                 Claim Under Review ⏳
                                             </p>
                                         )}
 
-                                        {order.claim?.status === "Approved" && (
+                                        {order.claimStatus === "Approved" && (
                                             <p style={{ color: "#22c55e", marginTop: "5px" }}>
                                                 Claim Approved ✅
                                             </p>
