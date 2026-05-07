@@ -4,6 +4,18 @@ import { v2 as cloudinary } from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 /* =========================
+   CLEAN FILE NAME HELPER
+========================= */
+const cleanFileName = (name = "file") => {
+  return name
+    .split(".")[0]
+    .toString()
+    .trim()                    // remove leading/trailing spaces
+    .replace(/\s+/g, "_")     // spaces → underscore
+    .replace(/[^\w-]/g, "");   // remove special characters
+};
+
+/* =========================
    CLOUDINARY STORAGE CONFIG
 ========================= */
 const storage = new CloudinaryStorage({
@@ -11,14 +23,11 @@ const storage = new CloudinaryStorage({
   params: async (req, file) => {
     return {
       folder: "order_claims",
-
-      // IMPORTANT: ensures images always upload correctly
       resource_type: "image",
 
-      // safer naming (prevents overwrite bugs)
-      public_id: `${Date.now()}-${file.originalname.split(".")[0]}`,
+      // ✅ SAFE public_id (NO whitespace / invalid chars)
+      public_id: `${Date.now()}-${cleanFileName(file.originalname)}`,
 
-      // allow only images
       allowed_formats: ["jpg", "png", "jpeg"],
     };
   },
@@ -30,7 +39,6 @@ const storage = new CloudinaryStorage({
 const upload = multer({
   storage,
 
-  // safety limit (optional but recommended)
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB max
   },
