@@ -112,7 +112,7 @@ export default function Orders() {
             formData.append("image", file);
 
             const res = await fetch(
-                `${backendUrl}/api/orders/${orderId}/submit-claim`,
+                `${backendUrl}/api/orders/${orderId}/claim`,
                 {
                     method: "PUT",
                     body: formData,
