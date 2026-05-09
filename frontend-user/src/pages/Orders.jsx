@@ -37,6 +37,8 @@ export default function Orders() {
 
             const data = await res.json();
 
+            console.log(data);
+
             setOrders(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error(error);
@@ -214,12 +216,12 @@ export default function Orders() {
                                                 order.status === "Pending"
                                                     ? "#fbbf24"
                                                     : order.status ===
-                                                        "Delivered"
-                                                        ? "#22c55e"
-                                                        : order.status ===
-                                                            "Cancelled"
-                                                            ? "#ef4444"
-                                                            : "#60a5fa",
+                                                      "Delivered"
+                                                    ? "#22c55e"
+                                                    : order.status ===
+                                                      "Cancelled"
+                                                    ? "#ef4444"
+                                                    : "#60a5fa",
                                         }}
                                     >
                                         {order.status}
@@ -240,18 +242,50 @@ export default function Orders() {
 
                                             background:
                                                 order.payment?.status ===
-                                                    "Approved"
+                                                "Approved"
                                                     ? "#22c55e"
-                                                    : order.payment
-                                                        .status ===
-                                                        "Rejected"
-                                                        ? "#ef4444"
-                                                        : "#fbbf24",
+                                                    : order.payment?.status ===
+                                                      "Rejected"
+                                                    ? "#ef4444"
+                                                    : "#fbbf24",
                                         }}
                                     >
-                                        Payment:{" "}
-                                        {order.payment?.status}
+                                        Payment: {order.payment?.status}
                                     </span>
+                                </div>
+                            )}
+
+                            {/* =========================
+                                COMPARTMENT DETAILS
+                            ========================= */}
+                            {(order.compartment ||
+                                order.compartmentPassword) && (
+                                <div style={styles.compartmentBox}>
+                                    <h4 style={styles.compartmentTitle}>
+                                        Locker Information 🔐
+                                    </h4>
+
+                                    {order.compartment && (
+                                        <p style={styles.compartmentText}>
+                                            📦 Compartment:
+                                            <strong>
+                                                {" "}
+                                                {order.compartment}
+                                            </strong>
+                                        </p>
+                                    )}
+
+                                    {order.compartmentPassword && (
+                                        <p style={styles.compartmentText}>
+                                            🔑 Password:
+                                            <strong>
+                                                {" "}
+                                                {
+                                                    order.compartmentPassword
+                                                }
+                                            </strong>
+                                        </p>
+                                    )}
                                 </div>
                             )}
 
@@ -263,9 +297,10 @@ export default function Orders() {
                                             src={item.image}
                                             style={styles.img}
                                             onError={(e) =>
-                                            (e.target.src =
-                                                "/placeholder.png")
+                                                (e.target.src =
+                                                    "/placeholder.png")
                                             }
+                                            alt={item.name}
                                         />
 
                                         <div>
@@ -275,6 +310,10 @@ export default function Orders() {
 
                                             <p style={styles.price}>
                                                 ₱{item.price}
+                                            </p>
+
+                                            <p style={styles.qty}>
+                                                Qty: {item.quantity}
                                             </p>
                                         </div>
                                     </div>
@@ -289,14 +328,15 @@ export default function Orders() {
                                 {order.status === "Pending" &&
                                     (!order.payment ||
                                         order.payment?.status ===
-                                        "Rejected") && (
+                                            "Rejected") && (
                                         <button
                                             onClick={() =>
                                                 handlePay(order._id)
                                             }
                                             style={styles.gcashBtn}
                                         >
-                                            {order.payment?.status === "Rejected"
+                                            {order.payment?.status ===
+                                            "Rejected"
                                                 ? "Retry Payment 💳"
                                                 : "Pay with GCash 💳"}
                                         </button>
@@ -305,13 +345,11 @@ export default function Orders() {
                                 {/* CANCEL BUTTON */}
                                 {order.status === "Pending" &&
                                     order.payment?.status !==
-                                    "Approved" &&
+                                        "Approved" &&
                                     !isPaying[order._id] && (
                                         <button
                                             onClick={() =>
-                                                handleCancel(
-                                                    order._id
-                                                )
+                                                handleCancel(order._id)
                                             }
                                             style={styles.cancelBtn}
                                         >
@@ -319,53 +357,80 @@ export default function Orders() {
                                         </button>
                                     )}
 
-
                                 {/* CLAIM PRODUCT */}
                                 {order.status === "Delivered" && (
                                     <div style={styles.claimBox}>
-
-                                        {/* =========================
-            CLAIM STATUS (ALWAYS SHOWN)
-        ========================= */}
-                                        {order.claimStatus === "Rejected" && (
-                                            <p style={{ color: "red", marginTop: "5px" }}>
-                                                Claim Rejected ❌ (Upload again)
+                                        {/* CLAIM STATUS */}
+                                        {order.claimStatus ===
+                                            "Rejected" && (
+                                            <p
+                                                style={{
+                                                    color: "red",
+                                                    marginTop: "5px",
+                                                    fontWeight: "600",
+                                                }}
+                                            >
+                                                Claim Rejected ❌
+                                                (Upload again)
                                             </p>
                                         )}
 
-                                        {order.claimStatus === "Pending" && (
-                                            <p style={{ color: "#f59e0b", marginTop: "5px" }}>
+                                        {order.claimStatus ===
+                                            "Pending" && (
+                                            <p
+                                                style={{
+                                                    color: "#f59e0b",
+                                                    marginTop: "5px",
+                                                    fontWeight: "600",
+                                                }}
+                                            >
                                                 Claim Under Review ⏳
                                             </p>
                                         )}
 
-                                        {order.claimStatus === "Approved" && (
-                                            <p style={{ color: "#22c55e", marginTop: "5px" }}>
+                                        {order.claimStatus ===
+                                            "Approved" && (
+                                            <p
+                                                style={{
+                                                    color: "#22c55e",
+                                                    marginTop: "5px",
+                                                    fontWeight: "600",
+                                                }}
+                                            >
                                                 Claim Approved ✅
                                             </p>
                                         )}
 
-                                        {/* =========================
-            UPLOAD SECTION (ONLY HIDDEN WHEN APPROVED)
-        ========================= */}
-                                        {order.claimStatus !== "Approved" && (
+                                        {/* UPLOAD */}
+                                        {order.claimStatus !==
+                                            "Approved" && (
                                             <>
                                                 <input
                                                     type="file"
                                                     accept="image/*"
                                                     capture="environment"
-                                                    style={styles.claimInput}
+                                                    style={
+                                                        styles.claimInput
+                                                    }
                                                     onChange={(e) =>
                                                         setClaimImage({
                                                             ...claimImage,
-                                                            [order._id]: e.target.files[0],
+                                                            [order._id]:
+                                                                e.target
+                                                                    .files[0],
                                                         })
                                                     }
                                                 />
 
                                                 <button
-                                                    style={styles.claimBtn}
-                                                    onClick={() => handleClaim(order._id)}
+                                                    style={
+                                                        styles.claimBtn
+                                                    }
+                                                    onClick={() =>
+                                                        handleClaim(
+                                                            order._id
+                                                        )
+                                                    }
                                                 >
                                                     Claim Product 📸
                                                 </button>
@@ -382,8 +447,7 @@ export default function Orders() {
                                         style={styles.viewBtn}
                                         onClick={() =>
                                             setSelectedProof(
-                                                order.payment
-                                                    .proof
+                                                order.payment.proof
                                             )
                                         }
                                     >
@@ -511,6 +575,27 @@ const styles = {
         fontWeight: "bold",
     },
 
+    compartmentBox: {
+        marginBottom: "15px",
+        padding: "12px",
+        borderRadius: "10px",
+        background: "#ecfeff",
+        border: "1px solid #a5f3fc",
+    },
+
+    compartmentTitle: {
+        margin: "0 0 10px 0",
+        fontSize: "15px",
+        fontWeight: "700",
+        color: "#0f172a",
+    },
+
+    compartmentText: {
+        margin: "5px 0",
+        color: "#0f172a",
+        fontWeight: "600",
+    },
+
     items: {
         display: "flex",
         flexDirection: "column",
@@ -541,6 +626,12 @@ const styles = {
         margin: 0,
         color: "#22c55e",
         fontWeight: "bold",
+    },
+
+    qty: {
+        margin: "4px 0 0 0",
+        fontSize: "13px",
+        color: "#6b7280",
     },
 
     footer: {
@@ -622,12 +713,15 @@ const styles = {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        zIndex: 999,
     },
 
     modal: {
         background: "#fff",
         padding: "15px",
         borderRadius: "10px",
+        maxWidth: "500px",
+        width: "90%",
     },
 
     modalImg: {
@@ -644,5 +738,6 @@ const styles = {
         border: "none",
         borderRadius: "6px",
         cursor: "pointer",
+        width: "100%",
     },
 };
