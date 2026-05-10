@@ -57,6 +57,13 @@ app.get("/", (req, res) => {
 });
 
 /* ========================
+   HEALTH CHECK ROUTE
+======================== */
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
+
+/* ========================
    API ROUTES
 ======================== */
 app.use("/api/orders", orderRoutes);

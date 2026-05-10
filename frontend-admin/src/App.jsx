@@ -12,14 +12,32 @@ import AdminLogin from "./admin/pages/AdminLogin";
 import SalesReport from "./admin/pages/SalesReport";
 import AdminArchivedProducts from "./admin/pages/AdminArchivedProducts";
 
+const backendUrl = "https://acsproject-lfwx.onrender.com";
+
 function App() {
+
   const [isAdmin, setIsAdmin] = useState(() => {
-  return localStorage.getItem("admin") === "true";
-});
+    return localStorage.getItem("admin") === "true";
+  });
 
   useEffect(() => {
     const admin = localStorage.getItem("admin") === "true";
     setIsAdmin(admin);
+  }, []);
+
+  // KEEP BACKEND ALIVE
+  useEffect(() => {
+
+    const keepAlive = () => {
+      fetch(`${backendUrl}/health`).catch(() => {});
+    };
+
+    keepAlive();
+
+    const interval = setInterval(keepAlive, 240000);
+
+    return () => clearInterval(interval);
+
   }, []);
 
   return (
