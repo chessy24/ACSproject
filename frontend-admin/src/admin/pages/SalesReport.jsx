@@ -113,72 +113,70 @@ export default function SalesReport() {
      DOWNLOAD EXCEL
   ========================= */
   const downloadExcel = () => {
-  try {
-    if (!report) return;
+    try {
+      if (!report) return;
 
-    const rows = [];
+      const rows = [];
 
-    report.orders.forEach((order) => {
-      order.items.forEach((item) => {
-        rows.push({
-          Name: order.userId?.name || "N/A",
-          Email: order.userId?.email || "N/A",
-          Date: new Date(order.createdAt).toLocaleDateString(),
-          OrderID: order._id.slice(-6),
-          Item: item.name,
-          Quantity: item.quantity,
-          Price: item.price,
-          Subtotal: item.quantity * item.price,
-          "Order Total": order.total,
-          Status: order.status,
+      report.orders.forEach((order) => {
+        order.items.forEach((item) => {
+          rows.push({
+            Name: order.userId?.name || "N/A",
+            Email: order.userId?.email || "N/A",
+            Date: new Date(order.createdAt).toLocaleDateString(),
+            OrderID: order._id.slice(-6),
+            Item: item.name,
+            Quantity: item.quantity,
+            Price: item.price,
+            Subtotal: item.quantity * item.price,
+            "Order Total": order.total,
+            Status: order.status,
+          });
         });
       });
-    });
 
-    // Sheet 1: Detailed Orders
-    const ordersSheet = XLSX.utils.json_to_sheet(rows);
+      const ordersSheet = XLSX.utils.json_to_sheet(rows);
 
-    // Sheet 2: Summary (NEW)
-    const summarySheet = XLSX.utils.json_to_sheet([
-      {
-        TotalRevenue: report.totalRevenue,
-        TotalOrders: report.totalOrders,
-        TotalItemsSold: report.totalItemsSold,
-      },
-    ]);
+      const summarySheet = XLSX.utils.json_to_sheet([
+        {
+          TotalRevenue: report.totalRevenue,
+          TotalOrders: report.totalOrders,
+          TotalItemsSold: report.totalItemsSold,
+        },
+      ]);
 
-    const workbook = XLSX.utils.book_new();
+      const workbook = XLSX.utils.book_new();
 
-    XLSX.utils.book_append_sheet(
-      workbook,
-      ordersSheet,
-      "Orders"
-    );
+      XLSX.utils.book_append_sheet(
+        workbook,
+        ordersSheet,
+        "Orders"
+      );
 
-    XLSX.utils.book_append_sheet(
-      workbook,
-      summarySheet,
-      "Summary"
-    );
+      XLSX.utils.book_append_sheet(
+        workbook,
+        summarySheet,
+        "Summary"
+      );
 
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
 
-    const data = new Blob([excelBuffer], {
-      type:
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
-    });
+      const data = new Blob([excelBuffer], {
+        type:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+      });
 
-    saveAs(
-      data,
-      `sales-report-${from}-to-${to}.xlsx`
-    );
-  } catch (error) {
-    console.error("Excel download failed:", error);
-  }
-};
+      saveAs(
+        data,
+        `sales-report-${from}-to-${to}.xlsx`
+      );
+    } catch (error) {
+      console.error("Excel download failed:", error);
+    }
+  };
 
   return (
     <div style={styles.page}>
@@ -277,12 +275,7 @@ export default function SalesReport() {
             <div style={styles.chartBox}>
               <h3>Revenue Analytics</h3>
 
-              <div
-                style={{
-                  width: "100%",
-                  height: 300,
-                }}
-              >
+              <div style={{ width: "100%", height: 300 }}>
                 <ResponsiveContainer>
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -310,10 +303,7 @@ export default function SalesReport() {
 
               {report.topProducts?.length > 0 ? (
                 report.topProducts.map((p, i) => (
-                  <div
-                    key={i}
-                    style={styles.productItem}
-                  >
+                  <div key={i} style={styles.productItem}>
                     <span>{p.name}</span>
 
                     <span>{p.qty} sold</span>
@@ -324,29 +314,46 @@ export default function SalesReport() {
               )}
             </div>
 
-            {/* ORDERS */}
+            {/* ORDERS (FULL FIXED LIKE EXCEL) */}
             <div style={styles.section}>
               <h3>Orders</h3>
 
               <div style={styles.orderList}>
                 {report.orders?.length > 0 ? (
-                  report.orders.map((o) => (
-                    <div
-                      key={o._id}
-                      style={styles.orderItem}
-                    >
+                  report.orders.map((order) => (
+                    <div key={order._id} style={styles.orderCard}>
+
                       <div>
-                        #{o._id.slice(-6)}
+                        <b>{order.userId?.name || "N/A"}</b> |{" "}
+                        {order.userId?.email || "N/A"}
                       </div>
 
                       <div>
-                        ₱
-                        {Number(
-                          o.total || 0
-                        ).toLocaleString()}
+                        Date:{" "}
+                        {new Date(order.createdAt).toLocaleDateString()}
                       </div>
 
-                      <div>{o.status}</div>
+                      <div>
+                        Order Total: ₱{order.total}
+                      </div>
+
+                      <div>Status: {order.status}</div>
+
+                      <div>
+                        <b>Items:</b>
+
+                        {order.items.map((item, i) => (
+                          <div key={i} style={styles.itemRow}>
+                            <span>{item.name}</span>
+                            <span>Qty: {item.quantity}</span>
+                            <span>₱{item.price}</span>
+                            <span>
+                              Sub: {item.quantity * item.price}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
                     </div>
                   ))
                 ) : (
@@ -421,7 +428,6 @@ const styles = {
     borderRadius: "6px",
     border: "none",
     fontWeight: "bold",
-    cursor: "pointer",
   },
 
   excelBtn: {
@@ -432,7 +438,6 @@ const styles = {
     borderRadius: "6px",
     border: "none",
     fontWeight: "bold",
-    cursor: "pointer",
   },
 
   reportContainer: {
@@ -474,11 +479,17 @@ const styles = {
     overflowX: "auto",
   },
 
-  orderItem: {
+  orderCard: {
+    background: "#f9fafb",
+    padding: "12px",
+    borderRadius: "8px",
+    marginBottom: "12px",
+  },
+
+  itemRow: {
     display: "flex",
     justifyContent: "space-between",
-    minWidth: "250px",
-    padding: "10px 0",
-    borderBottom: "1px solid #eee",
+    fontSize: "13px",
+    paddingLeft: "10px",
   },
 };
