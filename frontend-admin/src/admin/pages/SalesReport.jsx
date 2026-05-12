@@ -113,82 +113,72 @@ export default function SalesReport() {
      DOWNLOAD EXCEL
   ========================= */
   const downloadExcel = () => {
-    try {
-      if (!report) return;
+  try {
+    if (!report) return;
 
-      const rows = [];
+    const rows = [];
 
-      report.orders.forEach((order) => {
-        order.items.forEach((item) => {
-          rows.push({
-            Name: order.userId?.name || "N/A",
-
-            Email: order.userId?.email || "N/A",
-
-            Date: new Date(
-              order.date || order.createdAt
-            ).toLocaleDateString(),
-
-            Item: item.name,
-
-            Quantity: item.quantity,
-
-            Price: item.price,
-
-            Subtotal:
-              Number(item.quantity) * Number(item.price),
-
-            "Order Total": order.total,
-
-            Status: order.status,
-          });
+    report.orders.forEach((order) => {
+      order.items.forEach((item) => {
+        rows.push({
+          Name: order.userId?.name || "N/A",
+          Email: order.userId?.email || "N/A",
+          Date: new Date(order.createdAt).toLocaleDateString(),
+          OrderID: order._id.slice(-6),
+          Item: item.name,
+          Quantity: item.quantity,
+          Price: item.price,
+          Subtotal: item.quantity * item.price,
+          "Order Total": order.total,
+          Status: order.status,
         });
       });
+    });
 
-      /* CREATE WORKSHEET */
-      const worksheet = XLSX.utils.json_to_sheet(rows);
+    // Sheet 1: Detailed Orders
+    const ordersSheet = XLSX.utils.json_to_sheet(rows);
 
-      /* COLUMN WIDTHS */
-      worksheet["!cols"] = [
-        { wch: 25 },
-        { wch: 30 },
-        { wch: 15 },
-        { wch: 30 },
-        { wch: 10 },
-        { wch: 10 },
-        { wch: 12 },
-        { wch: 15 },
-        { wch: 15 },
-      ];
+    // Sheet 2: Summary (NEW)
+    const summarySheet = XLSX.utils.json_to_sheet([
+      {
+        TotalRevenue: report.totalRevenue,
+        TotalOrders: report.totalOrders,
+        TotalItemsSold: report.totalItemsSold,
+      },
+    ]);
 
-      /* CREATE WORKBOOK */
-      const workbook = XLSX.utils.book_new();
+    const workbook = XLSX.utils.book_new();
 
-      XLSX.utils.book_append_sheet(
-        workbook,
-        worksheet,
-        "Sales Report"
-      );
+    XLSX.utils.book_append_sheet(
+      workbook,
+      ordersSheet,
+      "Orders"
+    );
 
-      /* EXPORT */
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "array",
-      });
+    XLSX.utils.book_append_sheet(
+      workbook,
+      summarySheet,
+      "Summary"
+    );
 
-      const data = new Blob([excelBuffer], {
-        type:
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
-      });
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
 
-      saveAs(
-        data,
-        `sales-report-${from}-to-${to}.xlsx`
-      );
-    } catch (error) {
-      console.error("Excel download failed:", error);
-    }
-  };
+    const data = new Blob([excelBuffer], {
+      type:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+    });
+
+    saveAs(
+      data,
+      `sales-report-${from}-to-${to}.xlsx`
+    );
+  } catch (error) {
+    console.error("Excel download failed:", error);
+  }
+};
 
   return (
     <div style={styles.page}>
@@ -336,7 +326,7 @@ export default function SalesReport() {
 
             {/* ORDERS */}
             <div style={styles.section}>
-              <h3>📦 Orders</h3>
+              <h3>Orders</h3>
 
               <div style={styles.orderList}>
                 {report.orders?.length > 0 ? (
