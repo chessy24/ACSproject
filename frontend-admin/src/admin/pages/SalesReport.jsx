@@ -121,9 +121,9 @@ export default function SalesReport() {
       report.orders.forEach((order) => {
         order.items.forEach((item) => {
           rows.push({
-            Name: order.name || "N/A",
+            Name: order.userId?.name || "N/A",
 
-            Email: order.email || "N/A",
+            Email: order.userId?.email || "N/A",
 
             Date: new Date(
               order.date || order.createdAt
