@@ -1,7 +1,10 @@
 import { useState } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 import backendUrl from "../../config";
+
 import {
   LineChart,
   Line,
@@ -19,54 +22,177 @@ export default function SalesReport() {
 
   const isDisabled = !from || !to || from > to;
 
+  /* =========================
+     FETCH REPORT
+  ========================= */
   const fetchReport = async () => {
-    if (isDisabled) return;
+    try {
+      if (isDisabled) return;
 
-    const res = await fetch(
-      `${backendUrl}/api/reports/sales?from=${from}&to=${to}`
-    );
-    const data = await res.json();
-    setReport(data);
+      const res = await fetch(
+        `${backendUrl}/api/reports/sales?from=${from}&to=${to}`
+      );
+
+      const data = await res.json();
+
+      setReport(data);
+    } catch (error) {
+      console.error("Failed to fetch report:", error);
+    }
   };
 
+  /* =========================
+     CHART DATA
+  ========================= */
   const chartData = report
-    ? Object.entries(report.dailySales).map(([date, value]) => ({
-      date,
-      revenue: value,
-    }))
+    ? Object.entries(report.dailySales || {}).map(([date, value]) => ({
+        date,
+        revenue: value,
+      }))
     : [];
 
+  /* =========================
+     DOWNLOAD PDF
+  ========================= */
   const downloadPDF = async () => {
-    const input = document.getElementById("reportContent");
+    try {
+      const input = document.getElementById("reportContent");
 
-    const canvas = await html2canvas(input, { scale: 2 });
-    const imgData = canvas.toDataURL("image/png");
+      const canvas = await html2canvas(input, {
+        scale: 2,
+      });
 
-    const pdf = new jsPDF("p", "mm", "a4");
+      const imgData = canvas.toDataURL("image/png");
 
-    const imgWidth = 190;
-    const pageHeight = 297;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pdf = new jsPDF("p", "mm", "a4");
 
-    let heightLeft = imgHeight;
-    let position = 10;
+      const imgWidth = 190;
+      const pageHeight = 297;
 
-    pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
+      const imgHeight =
+        (canvas.height * imgWidth) / canvas.width;
 
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+      let heightLeft = imgHeight;
+      let position = 10;
+
+      pdf.addImage(
+        imgData,
+        "PNG",
+        10,
+        position,
+        imgWidth,
+        imgHeight
+      );
+
       heightLeft -= pageHeight;
-    }
 
-    pdf.save("sales-report.pdf");
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+
+        pdf.addPage();
+
+        pdf.addImage(
+          imgData,
+          "PNG",
+          10,
+          position,
+          imgWidth,
+          imgHeight
+        );
+
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`sales-report-${from}-to-${to}.pdf`);
+    } catch (error) {
+      console.error("PDF download failed:", error);
+    }
+  };
+
+  /* =========================
+     DOWNLOAD EXCEL
+  ========================= */
+  const downloadExcel = () => {
+    try {
+      if (!report) return;
+
+      const rows = [];
+
+      report.orders.forEach((order) => {
+        order.items.forEach((item) => {
+          rows.push({
+            Name: order.name || "N/A",
+
+            Email: order.email || "N/A",
+
+            Date: new Date(
+              order.date || order.createdAt
+            ).toLocaleDateString(),
+
+            Item: item.name,
+
+            Quantity: item.quantity,
+
+            Price: item.price,
+
+            Subtotal:
+              Number(item.quantity) * Number(item.price),
+
+            "Order Total": order.total,
+
+            Status: order.status,
+          });
+        });
+      });
+
+      /* CREATE WORKSHEET */
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+
+      /* COLUMN WIDTHS */
+      worksheet["!cols"] = [
+        { wch: 25 },
+        { wch: 30 },
+        { wch: 15 },
+        { wch: 30 },
+        { wch: 10 },
+        { wch: 10 },
+        { wch: 12 },
+        { wch: 15 },
+        { wch: 15 },
+      ];
+
+      /* CREATE WORKBOOK */
+      const workbook = XLSX.utils.book_new();
+
+      XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Sales Report"
+      );
+
+      /* EXPORT */
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+      const data = new Blob([excelBuffer], {
+        type:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+      });
+
+      saveAs(
+        data,
+        `sales-report-${from}-to-${to}.xlsx`
+      );
+    } catch (error) {
+      console.error("Excel download failed:", error);
+    }
   };
 
   return (
     <div style={styles.page}>
-      <h1 style={{ ...styles.title, color: "#000" }}>
+      <h1 style={styles.title}>
         📊 Sales Report
       </h1>
 
@@ -74,6 +200,7 @@ export default function SalesReport() {
       <div style={styles.filterBox}>
         <div style={styles.inputGroup}>
           <label>From</label>
+
           <input
             type="date"
             style={styles.input}
@@ -84,6 +211,7 @@ export default function SalesReport() {
 
         <div style={styles.inputGroup}>
           <label>To</label>
+
           <input
             type="date"
             style={styles.input}
@@ -96,6 +224,7 @@ export default function SalesReport() {
           style={{
             ...styles.button,
             opacity: isDisabled ? 0.5 : 1,
+            cursor: isDisabled ? "not-allowed" : "pointer",
           }}
           onClick={fetchReport}
           disabled={isDisabled}
@@ -104,28 +233,53 @@ export default function SalesReport() {
         </button>
       </div>
 
+      {/* REPORT */}
       {report && (
         <>
-          <button style={styles.pdfBtn} onClick={downloadPDF}>
-            Download PDF
-          </button>
+          {/* ACTION BUTTONS */}
+          <div style={styles.buttonGroup}>
+            <button
+              style={styles.pdfBtn}
+              onClick={downloadPDF}
+            >
+              Download PDF
+            </button>
 
-          <div id="reportContent" style={styles.reportContainer}>
-            {/* CARDS */}
+            <button
+              style={styles.excelBtn}
+              onClick={downloadExcel}
+            >
+              Download Excel
+            </button>
+          </div>
+
+          <div
+            id="reportContent"
+            style={styles.reportContainer}
+          >
+            {/* SUMMARY CARDS */}
             <div style={styles.cards}>
               <div style={styles.card}>
                 <h4>Revenue</h4>
-                <p>₱{report.totalRevenue}</p>
+
+                <p>
+                  ₱
+                  {Number(
+                    report.totalRevenue || 0
+                  ).toLocaleString()}
+                </p>
               </div>
 
               <div style={styles.card}>
                 <h4>Orders</h4>
-                <p>{report.totalOrders}</p>
+
+                <p>{report.totalOrders || 0}</p>
               </div>
 
               <div style={styles.card}>
-                <h4>Items</h4>
-                <p>{report.totalItemsSold}</p>
+                <h4>Items Sold</h4>
+
+                <p>{report.totalItemsSold || 0}</p>
               </div>
             </div>
 
@@ -133,18 +287,27 @@ export default function SalesReport() {
             <div style={styles.chartBox}>
               <h3>Revenue Analytics</h3>
 
-              <div style={{ width: "100%", height: 250 }}>
+              <div
+                style={{
+                  width: "100%",
+                  height: 300,
+                }}
+              >
                 <ResponsiveContainer>
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" hide />
+
+                    <XAxis dataKey="date" />
+
                     <YAxis />
+
                     <Tooltip />
+
                     <Line
                       type="monotone"
                       dataKey="revenue"
                       stroke="#3b82f6"
-                      strokeWidth={2}
+                      strokeWidth={3}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -155,12 +318,20 @@ export default function SalesReport() {
             <div style={styles.section}>
               <h3>🔥 Top Products</h3>
 
-              {report.topProducts.map((p, i) => (
-                <div key={i} style={styles.productItem}>
-                  <span>{p.name}</span>
-                  <span>{p.qty} sold</span>
-                </div>
-              ))}
+              {report.topProducts?.length > 0 ? (
+                report.topProducts.map((p, i) => (
+                  <div
+                    key={i}
+                    style={styles.productItem}
+                  >
+                    <span>{p.name}</span>
+
+                    <span>{p.qty} sold</span>
+                  </div>
+                ))
+              ) : (
+                <p>No top products found.</p>
+              )}
             </div>
 
             {/* ORDERS */}
@@ -168,13 +339,29 @@ export default function SalesReport() {
               <h3>📦 Orders</h3>
 
               <div style={styles.orderList}>
-                {report.orders.map((o) => (
-                  <div key={o._id} style={styles.orderItem}>
-                    <div>#{o._id.slice(-6)}</div>
-                    <div>₱{o.total}</div>
-                    <div>{o.status}</div>
-                  </div>
-                ))}
+                {report.orders?.length > 0 ? (
+                  report.orders.map((o) => (
+                    <div
+                      key={o._id}
+                      style={styles.orderItem}
+                    >
+                      <div>
+                        #{o._id.slice(-6)}
+                      </div>
+
+                      <div>
+                        ₱
+                        {Number(
+                          o.total || 0
+                        ).toLocaleString()}
+                      </div>
+
+                      <div>{o.status}</div>
+                    </div>
+                  ))
+                ) : (
+                  <p>No orders found.</p>
+                )}
               </div>
             </div>
           </div>
@@ -185,7 +372,7 @@ export default function SalesReport() {
 }
 
 /* =========================
-   MOBILE-FIRST STYLES
+   STYLES
 ========================= */
 const styles = {
   page: {
@@ -195,15 +382,17 @@ const styles = {
   },
 
   title: {
-    fontSize: "20px",
-    marginBottom: "15px",
+    fontSize: "24px",
+    marginBottom: "20px",
+    color: "#000",
+    fontWeight: "bold",
   },
 
   filterBox: {
     display: "flex",
-    flexDirection: "column", // ✅ stack on mobile
+    flexDirection: "column",
     gap: "10px",
-    marginBottom: "15px",
+    marginBottom: "20px",
   },
 
   inputGroup: {
@@ -212,72 +401,94 @@ const styles = {
   },
 
   input: {
-    padding: "8px",
+    padding: "10px",
     borderRadius: "6px",
     border: "1px solid #ccc",
+    outline: "none",
   },
 
   button: {
     background: "#3b82f6",
     color: "#fff",
-    padding: "10px",
+    padding: "12px",
     border: "none",
     borderRadius: "6px",
+    fontWeight: "bold",
+  },
+
+  buttonGroup: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+    marginBottom: "10px",
   },
 
   pdfBtn: {
     width: "100%",
     background: "#111",
     color: "#fff",
-    padding: "10px",
+    padding: "12px",
     borderRadius: "6px",
-    marginBottom: "10px",
     border: "none",
+    fontWeight: "bold",
+    cursor: "pointer",
+  },
+
+  excelBtn: {
+    width: "100%",
+    background: "#15803d",
+    color: "#fff",
+    padding: "12px",
+    borderRadius: "6px",
+    border: "none",
+    fontWeight: "bold",
+    cursor: "pointer",
   },
 
   reportContainer: {
     background: "#fff",
     padding: "15px",
     borderRadius: "10px",
+    boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
   },
 
   cards: {
     display: "flex",
-    flexDirection: "column", // ✅ stack on mobile
+    flexDirection: "column",
     gap: "10px",
   },
 
   card: {
     background: "#f9fafb",
-    padding: "10px",
+    padding: "15px",
     borderRadius: "8px",
     textAlign: "center",
   },
 
   chartBox: {
-    marginTop: "15px",
+    marginTop: "20px",
   },
 
   section: {
-    marginTop: "20px",
+    marginTop: "25px",
   },
 
   productItem: {
     display: "flex",
     justifyContent: "space-between",
-    padding: "8px 0",
+    padding: "10px 0",
     borderBottom: "1px solid #eee",
   },
 
   orderList: {
-    overflowX: "auto", // ✅ scroll if needed
+    overflowX: "auto",
   },
 
   orderItem: {
     display: "flex",
     justifyContent: "space-between",
-    minWidth: "250px", // ✅ prevents squish
-    padding: "8px 0",
+    minWidth: "250px",
+    padding: "10px 0",
     borderBottom: "1px solid #eee",
   },
 };
