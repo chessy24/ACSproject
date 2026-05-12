@@ -8,18 +8,24 @@ export const getSalesReport = async (req, res) => {
     const start = new Date(from);
     const end = new Date(to);
 
-    // ✅ Get approved payments
+    // =========================
+    // GET APPROVED PAYMENTS
+    // =========================
     const approvedPayments = await Payment.find({
       status: "Approved",
       createdAt: { $gte: start, $lte: end },
     });
 
-    const orderIds = approvedPayments.map(p => p.orderId);
+    const orderIds = approvedPayments.map((p) => p.orderId);
 
-    // ✅ Get related orders
+    // =========================
+    // GET ORDERS (WITH USER INFO)
+    // =========================
     const orders = await Order.find({
       _id: { $in: orderIds },
-    });
+    })
+      .populate("userId", "name email") // ✅ FIX: THIS IS REQUIRED
+      .sort({ createdAt: -1 });
 
     // =========================
     // CALCULATIONS
@@ -31,29 +37,38 @@ export const getSalesReport = async (req, res) => {
     const productMap = {};
     const dailySales = {};
 
-    orders.forEach(order => {
+    orders.forEach((order) => {
       totalRevenue += order.total || 0;
 
-      const date = order.createdAt.toISOString().split("T")[0];
+      const date = order.createdAt
+        .toISOString()
+        .split("T")[0];
 
-      dailySales[date] = (dailySales[date] || 0) + order.total;
+      dailySales[date] =
+        (dailySales[date] || 0) + order.total;
 
-      order.items.forEach(item => {
+      order.items.forEach((item) => {
         totalItemsSold += item.quantity;
 
         if (!productMap[item.name]) {
           productMap[item.name] = 0;
         }
+
         productMap[item.name] += item.quantity;
       });
     });
 
-    // ✅ Top products
+    // =========================
+    // TOP PRODUCTS
+    // =========================
     const topProducts = Object.entries(productMap)
       .map(([name, qty]) => ({ name, qty }))
       .sort((a, b) => b.qty - a.qty)
       .slice(0, 5);
 
+    // =========================
+    // RESPONSE
+    // =========================
     res.json({
       totalRevenue,
       totalOrders,
@@ -64,7 +79,9 @@ export const getSalesReport = async (req, res) => {
     });
 
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Error generating report" });
+    console.log("Sales Report Error:", err);
+    res.status(500).json({
+      message: "Error generating report",
+    });
   }
 };
