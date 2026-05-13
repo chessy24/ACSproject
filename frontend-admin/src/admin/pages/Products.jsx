@@ -393,7 +393,7 @@ function AdminProducts() {
 
                 <input
                   type="number"
-                  placeholder="Enter amount"
+                  placeholder="Enter Stock"
                   value={restockValues[p._id] || ""}
                   onChange={(e) =>
                     setRestockValues({
