@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import backendUrl from "../../config";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 export default function InventoryReport() {
   const [reports, setReports] = useState([]);
@@ -36,11 +38,69 @@ export default function InventoryReport() {
     return reportMonth === month;
   });
 
+  // DOWNLOAD EXCEL
+  const downloadExcel = () => {
+    const excelData = filteredReports.map((r) => ({
+      Product: r.productName,
+      Added: r.quantityAdded,
+      PreviousStock: r.previousStock,
+      NewStock: r.newStock,
+      Date: new Date(r.createdAt).toLocaleString(
+        "en-PH",
+        {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          second: "2-digit",
+        }
+      ),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "Inventory Report"
+    );
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    const data = new Blob(
+      [excelBuffer],
+      {
+        type:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+      }
+    );
+
+    saveAs(
+      data,
+      `Inventory_Report_${month || "All"}.xlsx`
+    );
+  };
+
   return (
     <div style={styles.page}>
-      <h1 style={styles.title}>
-        📊 Inventory Report
-      </h1>
+      <div style={styles.header}>
+        <h1 style={styles.title}>
+          📊 Inventory Report
+        </h1>
+
+        <button
+          onClick={downloadExcel}
+          style={styles.downloadBtn}
+        >
+          Download Excel
+        </button>
+      </div>
 
       {/* MONTH FILTER */}
       <input
@@ -110,10 +170,19 @@ const styles = {
     minHeight: "100vh",
   },
 
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "20px",
+    flexWrap: "wrap",
+    gap: "10px",
+  },
+
   title: {
     fontSize: "32px",
-    marginBottom: "20px",
     color: "#111827",
+    margin: 0,
   },
 
   monthInput: {
@@ -121,6 +190,16 @@ const styles = {
     borderRadius: "8px",
     border: "1px solid #ccc",
     marginBottom: "20px",
+  },
+
+  downloadBtn: {
+    padding: "10px 16px",
+    border: "none",
+    borderRadius: "8px",
+    background: "#111827",
+    color: "white",
+    cursor: "pointer",
+    fontWeight: "bold",
   },
 
   tableWrapper: {
