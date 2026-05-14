@@ -1,11 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import backendUrl from "../../config";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export default function InventoryReport() {
   const [reports, setReports] = useState([]);
   const [month, setMonth] = useState("");
+
+  const tableRef = useRef();
 
   // FETCH REPORTS
   const fetchReports = async () => {
@@ -87,6 +91,68 @@ export default function InventoryReport() {
     );
   };
 
+  // DOWNLOAD PDF
+  const downloadPDF = async () => {
+    const input = tableRef.current;
+
+    const canvas = await html2canvas(input, {
+      scale: 2,
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+
+    const pdf = new jsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format: "a4",
+    });
+
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+    const imgWidth = pdfWidth - 20;
+
+    const imgHeight =
+      (canvas.height * imgWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+
+    let position = 10;
+
+    pdf.addImage(
+      imgData,
+      "PNG",
+      10,
+      position,
+      imgWidth,
+      imgHeight
+    );
+
+    heightLeft -= pdfHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+
+      pdf.addPage();
+
+      pdf.addImage(
+        imgData,
+        "PNG",
+        10,
+        position,
+        imgWidth,
+        imgHeight
+      );
+
+      heightLeft -= pdfHeight;
+    }
+
+    pdf.save(
+      `Inventory_Report_${month || "All"}.pdf`
+    );
+  };
+
   return (
     <div style={styles.page}>
       <div style={styles.header}>
@@ -94,12 +160,21 @@ export default function InventoryReport() {
           📊 Inventory Report
         </h1>
 
-        <button
-          onClick={downloadExcel}
-          style={styles.downloadBtn}
-        >
-          Download Excel
-        </button>
+        <div style={styles.buttonGroup}>
+          <button
+            onClick={downloadExcel}
+            style={styles.downloadBtn}
+          >
+            Download Excel
+          </button>
+
+          <button
+            onClick={downloadPDF}
+            style={styles.pdfBtn}
+          >
+            Download PDF
+          </button>
+        </div>
       </div>
 
       {/* MONTH FILTER */}
@@ -110,7 +185,10 @@ export default function InventoryReport() {
         style={styles.monthInput}
       />
 
-      <div style={styles.tableWrapper}>
+      <div
+        style={styles.tableWrapper}
+        ref={tableRef}
+      >
         <table style={styles.table}>
           <thead>
             <tr>
@@ -179,6 +257,12 @@ const styles = {
     gap: "10px",
   },
 
+  buttonGroup: {
+    display: "flex",
+    gap: "10px",
+    flexWrap: "wrap",
+  },
+
   title: {
     fontSize: "32px",
     color: "#111827",
@@ -202,8 +286,20 @@ const styles = {
     fontWeight: "bold",
   },
 
+  pdfBtn: {
+    padding: "10px 16px",
+    border: "none",
+    borderRadius: "8px",
+    background: "#2563eb",
+    color: "white",
+    cursor: "pointer",
+    fontWeight: "bold",
+  },
+
   tableWrapper: {
     overflowX: "auto",
+    background: "white",
+    padding: "10px",
   },
 
   table: {
