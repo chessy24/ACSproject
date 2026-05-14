@@ -1,5 +1,6 @@
 import express from "express";
 import Product from "../models/Product.js";
+import InventoryReport from "../models/InventoryReport.js";
 import upload from "../middleware/upload.js";
 import cloudinary from "../utils/cloudinary.js";
 import streamifier from "streamifier";
@@ -42,16 +43,22 @@ router.get("/archived", async (req, res) => {
 router.post("/", upload.single("image"), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: "No image received" });
+      return res.status(400).json({
+        error: "No image received",
+      });
     }
 
     const stream = cloudinary.uploader.upload_stream(
       { folder: "products" },
+
       async (error, result) => {
         if (error) {
-          return res.status(500).json({ error: "Cloudinary failed" });
+          return res.status(500).json({
+            error: "Cloudinary failed",
+          });
         }
 
+        // CREATE PRODUCT
         const product = await Product.create({
           name: req.body.name,
           price: Number(req.body.price),
@@ -59,17 +66,37 @@ router.post("/", upload.single("image"), async (req, res) => {
           category: req.body.category,
           stock: Number(req.body.stock || 0),
           image: result.secure_url,
-          isArchived: false, // 🔥 IMPORTANT DEFAULT
+          isArchived: false,
+        });
+
+        // ✅ SAVE INVENTORY REPORT
+        await InventoryReport.create({
+          productId: product._id,
+          productName: product.name,
+
+          action: "ADD_PRODUCT",
+
+          quantityAdded: Number(product.stock),
+
+          previousStock: 0,
+
+          newStock: Number(product.stock),
         });
 
         res.json(product);
       }
     );
 
-    streamifier.createReadStream(req.file.buffer).pipe(stream);
+    streamifier
+      .createReadStream(req.file.buffer)
+      .pipe(stream);
 
   } catch (err) {
-    res.status(500).json({ error: "Upload failed" });
+    console.log(err);
+
+    res.status(500).json({
+      error: "Upload failed",
+    });
   }
 });
 
@@ -87,6 +114,25 @@ router.put("/:id/archive", async (req, res) => {
     res.json(updated);
   } catch (err) {
     res.status(500).json({ message: "Archive failed" });
+  }
+});
+
+/* =========================
+   INVENTORY REPORTS
+========================= */
+router.get("/inventory-reports/all", async (req, res) => {
+  try {
+    const reports = await InventoryReport.find()
+      .sort({ createdAt: -1 });
+
+    res.json(reports);
+
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      message: "Failed to fetch reports",
+    });
   }
 });
 
@@ -114,15 +160,44 @@ router.put("/:id/restock", async (req, res) => {
   try {
     const { amount } = req.body;
 
-    const updated = await Product.findByIdAndUpdate(
-      req.params.id,
-      { $inc: { stock: Number(amount) } },
-      { new: true }
-    );
+    const product = await Product.findById(req.params.id);
 
-    res.json(updated);
+    if (!product) {
+      return res.status(404).json({
+        message: "Product not found",
+      });
+    }
+
+    // OLD STOCK
+    const previousStock = product.stock;
+
+    // UPDATE STOCK
+    product.stock += Number(amount);
+
+    await product.save();
+
+    // ✅ SAVE REPORT
+    await InventoryReport.create({
+      productId: product._id,
+      productName: product.name,
+
+      action: "RESTOCK",
+
+      quantityAdded: Number(amount),
+
+      previousStock,
+
+      newStock: product.stock,
+    });
+
+    res.json(product);
+
   } catch (err) {
-    res.status(500).json({ message: "Restock failed" });
+    console.log(err);
+
+    res.status(500).json({
+      message: "Restock failed",
+    });
   }
 });
 

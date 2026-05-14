@@ -111,6 +111,20 @@ export default function Sidebar({ open, setOpen }) {
           <BarChart3 size={18} />
           Sales Report
         </Link>
+
+        <Link
+          to="/admin/inventory-report"
+          onClick={handleNavClick}
+          style={{
+            ...styles.item,
+            ...(isActive("/admin/inventory-report")
+              ? styles.active
+              : {}),
+          }}
+        >
+          <BarChart3 size={18} />
+          Inventory Report
+        </Link>
       </div>
     </>
   );

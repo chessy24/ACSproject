@@ -11,6 +11,7 @@ import Payments from "./admin/pages/AdminPayments";
 import AdminLogin from "./admin/pages/AdminLogin";
 import SalesReport from "./admin/pages/SalesReport";
 import AdminArchivedProducts from "./admin/pages/AdminArchivedProducts";
+import InventoryReport from "./pages/admin/InventoryReport";
 
 const backendUrl = "https://acsproject-lfwx.onrender.com";
 
@@ -29,7 +30,7 @@ function App() {
   useEffect(() => {
 
     const keepAlive = () => {
-      fetch(`${backendUrl}/health`).catch(() => {});
+      fetch(`${backendUrl}/health`).catch(() => { });
     };
 
     keepAlive();
@@ -77,6 +78,10 @@ function App() {
           <Route path="payments" element={<Payments />} />
           <Route path="sales-report" element={<SalesReport />} />
           <Route path="/admin/archived" element={<AdminArchivedProducts />} />
+          <Route
+            path="/admin/inventory-report"
+            element={<InventoryReport />}
+          />
         </Route>
 
       </Routes>
