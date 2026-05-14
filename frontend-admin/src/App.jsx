@@ -11,7 +11,7 @@ import Payments from "./admin/pages/AdminPayments";
 import AdminLogin from "./admin/pages/AdminLogin";
 import SalesReport from "./admin/pages/SalesReport";
 import AdminArchivedProducts from "./admin/pages/AdminArchivedProducts";
-import InventoryReport from "./pages/admin/InventoryReport";
+import InventoryReport from "../src/admin/pages/InventoryReport";
 
 const backendUrl = "https://acsproject-lfwx.onrender.com";
 
