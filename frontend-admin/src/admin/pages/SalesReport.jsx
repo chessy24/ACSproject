@@ -5,16 +5,6 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import backendUrl from "../../config";
 
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  ResponsiveContainer,
-} from "recharts";
-
 export default function SalesReport() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -40,16 +30,6 @@ export default function SalesReport() {
       console.error("Failed to fetch report:", error);
     }
   };
-
-  /* =========================
-     CHART DATA
-  ========================= */
-  const chartData = report
-    ? Object.entries(report.dailySales || {}).map(([date, value]) => ({
-        date,
-        revenue: value,
-      }))
-    : [];
 
   /* =========================
      DOWNLOAD PDF
@@ -236,7 +216,12 @@ export default function SalesReport() {
             <div style={styles.cards}>
               <div style={styles.card}>
                 <h4>Revenue</h4>
-                <p>₱{Number(report.totalRevenue || 0).toLocaleString()}</p>
+                <p>
+                  ₱
+                  {Number(
+                    report.totalRevenue || 0
+                  ).toLocaleString()}
+                </p>
               </div>
 
               <div style={styles.card}>
@@ -247,28 +232,6 @@ export default function SalesReport() {
               <div style={styles.card}>
                 <h4>Items Sold</h4>
                 <p>{report.totalItemsSold || 0}</p>
-              </div>
-            </div>
-
-            {/* CHART */}
-            <div style={styles.chartBox}>
-              <h3>Revenue Analytics</h3>
-
-              <div style={{ width: "100%", height: 300 }}>
-                <ResponsiveContainer>
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="revenue"
-                      stroke="#3b82f6"
-                      strokeWidth={3}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
               </div>
             </div>
 
@@ -288,7 +251,7 @@ export default function SalesReport() {
               )}
             </div>
 
-            {/* ORDERS (FIXED TABLE STYLE LIKE EXCEL) */}
+            {/* ORDERS */}
             <div style={styles.section}>
               <h3>Orders</h3>
 
@@ -312,15 +275,29 @@ export default function SalesReport() {
                     order.items.map((item, i) => (
                       <div key={i} style={styles.tableRow}>
                         <span>{order.userId?.name || "N/A"}</span>
-                        <span>{order.userId?.email || "N/A"}</span>
+
                         <span>
-                          {new Date(order.createdAt).toLocaleDateString()}
+                          {order.userId?.email || "N/A"}
                         </span>
+
+                        <span>
+                          {new Date(
+                            order.createdAt
+                          ).toLocaleDateString()}
+                        </span>
+
                         <span>{order._id.slice(-6)}</span>
+
                         <span>{item.name}</span>
+
                         <span>{item.quantity}</span>
+
                         <span>₱{item.price}</span>
-                        <span>₱{item.quantity * item.price}</span>
+
+                        <span>
+                          ₱{item.quantity * item.price}
+                        </span>
+
                         <span>{order.status}</span>
                       </div>
                     ))
@@ -429,10 +406,6 @@ const styles = {
     textAlign: "center",
   },
 
-  chartBox: {
-    marginTop: "20px",
-  },
-
   section: {
     marginTop: "25px",
   },
@@ -448,22 +421,25 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     marginTop: "10px",
+    overflowX: "auto",
   },
 
   tableHeader: {
     display: "grid",
-    gridTemplateColumns: "repeat(9, 1fr)",
+    gridTemplateColumns: "repeat(9, minmax(120px, 1fr))",
     fontWeight: "bold",
     background: "#f1f5f9",
     padding: "10px",
     fontSize: "12px",
+    gap: "10px",
   },
 
   tableRow: {
     display: "grid",
-    gridTemplateColumns: "repeat(9, 1fr)",
+    gridTemplateColumns: "repeat(9, minmax(120px, 1fr))",
     padding: "10px",
     fontSize: "12px",
     borderBottom: "1px solid #eee",
+    gap: "10px",
   },
 };
